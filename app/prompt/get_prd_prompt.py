@@ -1,21 +1,22 @@
-form langchain_prompts import PromptTemplate
-
-
+from langchain.prompts import PromptTemplate
 
 prd_template = PromptTemplate(
-    input_variables=["user_input","strategy"],
-template = """You are a Product Manager writing a PRD.
+    input_variables=["user_input", "strategist_output"],
+    template="""
+You are a Product Manager writing a PRD.
 
 Input Idea:
 {user_input}
 
 Strategy:
-{strategy}
+{strategist_output}
 
-Generate:
-- Features
-- Requirements
-- User stories
+Return ONLY valid JSON:
+
+{
+  "features": [],
+  "requirements": [],
+  "user_stories": []
+}
 """
-
 )
