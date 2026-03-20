@@ -8,9 +8,12 @@ You are a Product Strategist.
 User Idea:
 {idea}
 
-Provide:
-- Market positioning
-- Target users
-- High-level strategy
+Return ONLY valid JSON:
+
+{
+  "market_positioning": "",
+  "target_users": [],
+  "strategy": ""
+}
 """
 )
