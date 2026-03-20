@@ -1,12 +1,16 @@
-def get_strategist_prompt(user_input: str) -> str:
-    return f"""
+from langchain.prompts import PromptTemplate
+
+strategist_template = PromptTemplate(
+    input_variables=["idea"],
+    template="""
 You are a Product Strategist.
 
 User Idea:
-{user_input}
+{idea}
 
 Provide:
 - Market positioning
 - Target users
 - High-level strategy
 """
+)
