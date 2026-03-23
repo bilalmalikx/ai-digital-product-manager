@@ -1,1 +1,62 @@
-langchain[openai]
+product_agent_system/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   └── llm.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── product.py
+│   │   └── session.py
+│   ├── agents/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── strategist.py
+│   │   ├── prd_writer.py
+│   │   ├── market_researcher.py
+│   │   ├── tech_architect.py
+│   │   ├── ux_designer.py
+│   │   └── qa_engineer.py
+│   ├── prompts/
+│   │   ├── __init__.py
+│   │   ├── strategist.py
+│   │   ├── prd_writer.py
+│   │   ├── market_researcher.py
+│   │   ├── tech_architect.py
+│   │   ├── ux_designer.py
+│   │   └── qa_engineer.py
+│   ├── tools/
+│   │   ├── __init__.py
+│   │   ├── web_search.py
+│   │   ├── database_tools.py
+│   │   └── mcp_tools.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── product_service.py
+│   │   └── session_service.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── routes/
+│   │   │   ├── __init__.py
+│   │   │   ├── products.py
+│   │   │   └── sessions.py
+│   │   └── dependencies.py
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── product.py
+│   │   └── session.py
+│   └── state/
+│       ├── __init__.py
+│       └── schema.py
+├── alembic/
+│   ├── versions/
+│   ├── env.py
+│   └── script.py.mako
+├── alembic.ini
+├── requirements.txt
+├── .env
+└── docker-compose.yml
