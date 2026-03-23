@@ -1,62 +1,18 @@
-product_agent_system/
-├── app/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── config.py
-│   │   ├── database.py
-│   │   └── llm.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── product.py
-│   │   └── session.py
-│   ├── agents/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── strategist.py
-│   │   ├── prd_writer.py
-│   │   ├── market_researcher.py
-│   │   ├── tech_architect.py
-│   │   ├── ux_designer.py
-│   │   └── qa_engineer.py
-│   ├── prompts/
-│   │   ├── __init__.py
-│   │   ├── strategist.py
-│   │   ├── prd_writer.py
-│   │   ├── market_researcher.py
-│   │   ├── tech_architect.py
-│   │   ├── ux_designer.py
-│   │   └── qa_engineer.py
-│   ├── tools/
-│   │   ├── __init__.py
-│   │   ├── web_search.py
-│   │   ├── database_tools.py
-│   │   └── mcp_tools.py
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── product_service.py
-│   │   └── session_service.py
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── routes/
-│   │   │   ├── __init__.py
-│   │   │   ├── products.py
-│   │   │   └── sessions.py
-│   │   └── dependencies.py
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   ├── product.py
-│   │   └── session.py
-│   └── state/
-│       ├── __init__.py
-│       └── schema.py
-├── alembic/
-│   ├── versions/
-│   ├── env.py
-│   └── script.py.mako
-├── alembic.ini
-├── requirements.txt
-├── .env
-└── docker-compose.yml
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.9
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+langchain>=0.2.6
+langgraph==0.0.20
+langchain-openai==0.0.5
+langchain-anthropic==0.1.0
+langchain-deepseek==0.0.1
+langsmith==0.0.77
+aiohttp==3.9.1
+httpx==0.25.1
+redis==5.0.1
+celery==5.3.4
