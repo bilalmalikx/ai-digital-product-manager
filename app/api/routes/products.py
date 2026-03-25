@@ -53,9 +53,9 @@ async def generate_product(
         )
 
 
-@router.get("/generate-stream")  # Changed from POST to GET
+@router.get("/generate-stream")
 async def generate_product_stream(
-    idea: str,  # Changed from request body to query parameter
+    idea: str,
     product_id: Optional[str] = None,
     db: Session = Depends(get_db)
 ):

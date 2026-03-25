@@ -10,10 +10,9 @@ import { StreamingService } from '../../services/streaming';
 
 @Component({
   selector: 'app-product-generate',
-  standalone: true,
-  imports: [RouterModule, CommonModule, FormsModule],
-  templateUrl: './product-generate.component.html',
-  styleUrls: ['./product-generate.component.scss']
+  imports: [RouterModule,CommonModule,FormsModule],
+  templateUrl: './product-generate.html',
+  styleUrl: './product-generate.scss',
 })
 export class ProductGenerateComponent implements OnInit, OnDestroy {
   idea: string = '';
