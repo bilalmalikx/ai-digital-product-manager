@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.product_service import ProductService
@@ -13,6 +14,8 @@ from app.schemas.product import (
 from typing import List
 from uuid import UUID
 import logging
+import json
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -49,15 +52,54 @@ async def generate_product(
             error=str(e)
         )
 
+
+@router.post("/generate-stream")
+async def generate_product_stream(
+    request: ProductGenerateRequest,
+    db: Session = Depends(get_db)
+):
+    """Generate product with real-time streaming updates."""
+    
+    async def event_generator():
+        try:
+            service = ProductService(db)
+            
+            # Start stream
+            yield f"data: {json.dumps({'type': 'start', 'message': '🚀 Starting product generation...'})}\n\n"
+            await asyncio.sleep(0.1)
+            
+            # Stream each agent's output
+            async for event in service.generate_product_stream(request.idea, request.product_id):
+                yield f"data: {json.dumps(event)}\n\n"
+                await asyncio.sleep(0.05)
+            
+            # End stream
+            yield f"data: {json.dumps({'type': 'end', 'message': '✅ Product generation complete!'})}\n\n"
+            
+        except Exception as e:
+            logger.error(f"Streaming error: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
 @router.get("/{product_id}", response_model=ProductAPIResponse)
 def get_product(
-    product_id: UUID,  # Changed from str to UUID
+    product_id: UUID,
     db: Session = Depends(get_db)
 ):
     """Get product by ID."""
     
     service = ProductService(db)
-    product = service.get_product(str(product_id))  # Convert UUID to string for service
+    product = service.get_product(str(product_id))
     
     if not product:
         return ProductAPIResponse(
@@ -69,6 +111,7 @@ def get_product(
         success=True,
         data=product
     )
+
 
 @router.get("/", response_model=ProductListResponse)
 def list_products(
