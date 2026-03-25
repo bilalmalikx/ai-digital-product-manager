@@ -1,1 +1,70 @@
-<p>product-generate works!</p>
+<div class="product-generate-container">
+  <div class="header">
+    <h1>Generate Product</h1>
+    <p>Enter your product idea and let our AI agents create complete product documentation</p>
+  </div>
+
+  <!-- Input Form -->
+  <div class="form-section">
+    <label class="form-label">Product Idea</label>
+    <textarea 
+      [(ngModel)]="idea"
+      class="form-textarea"
+      rows="5"
+      placeholder="Example: Build an enterprise-level project management tool with Angular..."
+      [disabled]="isLoading"></textarea>
+    
+    <div class="button-group">
+      <button 
+        (click)="generateWithStreaming()"
+        [disabled]="!idea.trim() || isLoading"
+        class="btn btn-primary">
+        {{ isLoading ? 'Generating...' : 'Generate Product' }}
+      </button>
+      
+      <button 
+        *ngIf="isLoading"
+        (click)="cancelStream()"
+        class="btn btn-danger">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    <span>❌</span>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Streaming Progress -->
+  <div *ngIf="streamMessages.length > 0" class="progress-section">
+    <h3>Generation Progress</h3>
+    <div class="progress-list">
+      <div *ngFor="let msg of streamMessages; let i = index" 
+           class="progress-item" [class.complete]="msg.type === 'complete'">
+        <div class="progress-icon">{{ getMessageIcon(msg.type) }}</div>
+        <div class="progress-content">
+          <div class="progress-message">{{ msg.message }}</div>
+          <div *ngIf="msg.agent" class="progress-agent">
+            {{ getAgentName(msg.agent) }}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div *ngIf="isLoading" class="loading-spinner">
+      <div class="spinner"></div>
+      <span>Processing...</span>
+    </div>
+  </div>
+
+  <!-- Result Link -->
+  <div *ngIf="productId" class="success-section">
+    <div class="success-icon">🎉</div>
+    <h3>Product Generated Successfully!</h3>
+    <a [routerLink]="['/product', productId]" class="btn btn-success">
+      View Product Details →
+    </a>
+  </div>
+</div>
