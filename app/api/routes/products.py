@@ -11,7 +11,7 @@ from app.schemas.product import (
     ProductGenerateResponse,
     ProductListResponse
 )
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 import logging
 import json
@@ -53,9 +53,10 @@ async def generate_product(
         )
 
 
-@router.post("/generate-stream")
+@router.get("/generate-stream")  # Changed from POST to GET
 async def generate_product_stream(
-    request: ProductGenerateRequest,
+    idea: str,  # Changed from request body to query parameter
+    product_id: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Generate product with real-time streaming updates."""
@@ -69,7 +70,7 @@ async def generate_product_stream(
             await asyncio.sleep(0.1)
             
             # Stream each agent's output
-            async for event in service.generate_product_stream(request.idea, request.product_id):
+            async for event in service.generate_product_stream(idea, product_id):
                 yield f"data: {json.dumps(event)}\n\n"
                 await asyncio.sleep(0.05)
             

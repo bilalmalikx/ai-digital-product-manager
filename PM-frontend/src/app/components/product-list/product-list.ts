@@ -8,16 +8,17 @@ import { ProductService } from '../../services/product';
   selector: 'app-product-list',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './product-list.html',
-  styleUrls: ['./product-list.scss']
+  templateUrl: './product-list.component.html',
+  styleUrls: ['./product-list.component.scss']
 })
-export class ProductList implements OnInit {
+export class ProductListComponent implements OnInit {
   products: Product[] = [];
   isLoading: boolean = true;
   error: string | null = null;
   total: number = 0;
   skip: number = 0;
   limit: number = 10;
+  Math = Math;
 
   constructor(private productService: ProductService) {}
 
@@ -28,12 +29,12 @@ export class ProductList implements OnInit {
   loadProducts(): void {
     this.isLoading = true;
     this.productService.getProducts(this.skip, this.limit).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.products = response.products;
         this.total = response.total;
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = 'Failed to load products. Please try again.';
         this.isLoading = false;
         console.error(err);

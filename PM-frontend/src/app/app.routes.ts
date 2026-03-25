@@ -1,11 +1,12 @@
 import { Routes } from '@angular/router';
-import { ProductGenerate } from './components/product-generate/product-generate';
-import { ProductList } from './components/product-list/product-list';
-import { ProductDetail } from './components/product-detail/product-detail';
+import { ProductGenerateComponent } from './components/product-generate/product-generate';
+import { ProductListComponent } from './components/product-list/product-list';
+import { ProductDetailComponent } from './components/product-detail/product-detail';
+
 
 export const routes: Routes = [
   { path: '', redirectTo: '/generate', pathMatch: 'full' },
-  { path: 'generate', component: ProductGenerate },
-  { path: 'products', component: ProductList },
-  { path: 'product/:id', component: ProductDetail }
+  { path: 'generate', component: ProductGenerateComponent },
+  { path: 'products', component: ProductListComponent },
+  { path: 'product/:id', component: ProductDetailComponent }
 ];

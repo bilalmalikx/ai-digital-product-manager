@@ -44,7 +44,6 @@
   font-size: 1rem;
   font-family: inherit;
   resize: vertical;
-  transition: border-color 0.2s;
   
   &:focus {
     outline: none;
@@ -100,6 +99,8 @@
 .btn-success {
   background-color: #48bb78;
   color: white;
+  text-decoration: none;
+  display: inline-block;
   
   &:hover {
     background-color: #38a169;

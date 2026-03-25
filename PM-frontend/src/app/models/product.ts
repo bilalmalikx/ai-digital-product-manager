@@ -22,7 +22,7 @@ export interface ProductGenerateRequest {
 
 export interface ProductResponse {
   success: boolean;
-  data?: any;
+  data?: Product;
   message?: string;
   error?: string;
   product_id?: string;

@@ -8,10 +8,10 @@ import { ProductService } from '../../services/product';
   selector: 'app-product-detail',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './product-detail.html',
-  styleUrls: ['./product-detail.scss']
+  templateUrl: './product-detail.component.html',
+  styleUrls: ['./product-detail.component.scss']
 })
-export class ProductDetail implements OnInit {
+export class ProductDetailComponent implements OnInit {
   product: Product | null = null;
   isLoading: boolean = true;
   error: string | null = null;
@@ -34,7 +34,7 @@ export class ProductDetail implements OnInit {
   loadProduct(productId: string): void {
     this.isLoading = true;
     this.productService.getProduct(productId).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response.success && response.data) {
           this.product = response.data;
         } else {
@@ -42,7 +42,7 @@ export class ProductDetail implements OnInit {
         }
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = 'Failed to load product details';
         this.isLoading = false;
         console.error(err);

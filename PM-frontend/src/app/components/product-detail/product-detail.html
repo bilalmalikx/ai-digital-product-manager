@@ -1,11 +1,9 @@
 <div class="product-detail-container">
-  <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-state">
     <div class="spinner"></div>
     <p>Loading product details...</p>
   </div>
 
-  <!-- Error State -->
   <div *ngIf="error" class="error-state">
     <div class="error-icon">⚠️</div>
     <p>{{ error }}</p>
@@ -13,9 +11,7 @@
     <a routerLink="/products" class="btn-primary">Back to Products</a>
   </div>
 
-  <!-- Product Content -->
   <div *ngIf="!isLoading && !error && product" class="product-content">
-    <!-- Header -->
     <div class="product-header">
       <div class="header-top">
         <a routerLink="/products" class="back-link">← Back to Products</a>
@@ -28,15 +24,9 @@
       <p class="product-idea">{{ product.idea }}</p>
       
       <div class="product-meta">
-        <div class="meta-item">
-          <span>🆔</span> {{ product.id }}
-        </div>
-        <div class="meta-item">
-          <span>📅 Created</span> {{ formatDate(product.created_at) }}
-        </div>
-        <div class="meta-item" *ngIf="product.updated_at">
-          <span>🔄 Updated</span> {{ formatDate(product.updated_at) }}
-        </div>
+        <div class="meta-item"><span>🆔</span> {{ product.id }}</div>
+        <div class="meta-item"><span>📅 Created</span> {{ formatDate(product.created_at) }}</div>
+        <div class="meta-item" *ngIf="product.updated_at"><span>🔄 Updated</span> {{ formatDate(product.updated_at) }}</div>
       </div>
       
       <div class="action-buttons" *ngIf="product.final_prd">
@@ -44,53 +34,18 @@
       </div>
     </div>
 
-    <!-- Tabs -->
     <div class="tabs">
-      <button 
-        [class.active]="activeTab === 'overview'" 
-        (click)="setActiveTab('overview')">
-        📋 Overview
-      </button>
-      <button 
-        [class.active]="activeTab === 'strategist'" 
-        (click)="setActiveTab('strategist')">
-        🎯 Strategist
-      </button>
-      <button 
-        [class.active]="activeTab === 'market'" 
-        (click)="setActiveTab('market')">
-        📊 Market Research
-      </button>
-      <button 
-        [class.active]="activeTab === 'prd'" 
-        (click)="setActiveTab('prd')">
-        📄 PRD
-      </button>
-      <button 
-        [class.active]="activeTab === 'tech'" 
-        (click)="setActiveTab('tech')">
-        🏗️ Tech Architecture
-      </button>
-      <button 
-        [class.active]="activeTab === 'ux'" 
-        (click)="setActiveTab('ux')">
-        🎨 UX Design
-      </button>
-      <button 
-        [class.active]="activeTab === 'qa'" 
-        (click)="setActiveTab('qa')">
-        🧪 QA Strategy
-      </button>
-      <button 
-        [class.active]="activeTab === 'final'" 
-        (click)="setActiveTab('final')">
-        📑 Final PRD
-      </button>
+      <button [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')">📋 Overview</button>
+      <button [class.active]="activeTab === 'strategist'" (click)="setActiveTab('strategist')">🎯 Strategist</button>
+      <button [class.active]="activeTab === 'market'" (click)="setActiveTab('market')">📊 Market Research</button>
+      <button [class.active]="activeTab === 'prd'" (click)="setActiveTab('prd')">📄 PRD</button>
+      <button [class.active]="activeTab === 'tech'" (click)="setActiveTab('tech')">🏗️ Tech Architecture</button>
+      <button [class.active]="activeTab === 'ux'" (click)="setActiveTab('ux')">🎨 UX Design</button>
+      <button [class.active]="activeTab === 'qa'" (click)="setActiveTab('qa')">🧪 QA Strategy</button>
+      <button [class.active]="activeTab === 'final'" (click)="setActiveTab('final')">📑 Final PRD</button>
     </div>
 
-    <!-- Tab Content -->
     <div class="tab-content">
-      <!-- Overview Tab -->
       <div *ngIf="activeTab === 'overview'" class="tab-pane">
         <div class="overview-grid">
           <div class="info-card">
@@ -120,7 +75,6 @@
         </div>
       </div>
 
-      <!-- Strategist Tab -->
       <div *ngIf="activeTab === 'strategist'" class="tab-pane">
         <div class="output-container" *ngIf="product.strategist_output; else noData">
           <div class="output-header">
@@ -131,7 +85,6 @@
         </div>
       </div>
 
-      <!-- Market Research Tab -->
       <div *ngIf="activeTab === 'market'" class="tab-pane">
         <div class="output-container" *ngIf="product.market_research_output; else noData">
           <div class="output-header">
@@ -142,7 +95,6 @@
         </div>
       </div>
 
-      <!-- PRD Tab -->
       <div *ngIf="activeTab === 'prd'" class="tab-pane">
         <div class="output-container" *ngIf="product.prd_output; else noData">
           <div class="output-header">
@@ -153,7 +105,6 @@
         </div>
       </div>
 
-      <!-- Tech Architecture Tab -->
       <div *ngIf="activeTab === 'tech'" class="tab-pane">
         <div class="output-container" *ngIf="product.tech_architecture; else noData">
           <div class="output-header">
@@ -164,7 +115,6 @@
         </div>
       </div>
 
-      <!-- UX Design Tab -->
       <div *ngIf="activeTab === 'ux'" class="tab-pane">
         <div class="output-container" *ngIf="product.ux_design; else noData">
           <div class="output-header">
@@ -175,7 +125,6 @@
         </div>
       </div>
 
-      <!-- QA Strategy Tab -->
       <div *ngIf="activeTab === 'qa'" class="tab-pane">
         <div class="output-container" *ngIf="product.qa_strategy; else noData">
           <div class="output-header">
@@ -186,7 +135,6 @@
         </div>
       </div>
 
-      <!-- Final PRD Tab -->
       <div *ngIf="activeTab === 'final'" class="tab-pane">
         <div class="output-container" *ngIf="product.final_prd; else noData">
           <div class="output-header">
@@ -194,7 +142,7 @@
             <button (click)="copyToClipboard(product.final_prd)" class="btn-icon">📋 Copy</button>
             <button (click)="downloadPRD()" class="btn-primary">📥 Download</button>
           </div>
-          <div class="prd-content markdown-body">
+          <div class="prd-content">
             <pre class="output-content">{{ product.final_prd }}</pre>
           </div>
         </div>

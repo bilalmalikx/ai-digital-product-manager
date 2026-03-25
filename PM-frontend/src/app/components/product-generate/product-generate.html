@@ -4,7 +4,6 @@
     <p>Enter your product idea and let our AI agents create complete product documentation</p>
   </div>
 
-  <!-- Input Form -->
   <div class="form-section">
     <label class="form-label">Product Idea</label>
     <textarea 
@@ -31,13 +30,11 @@
     </div>
   </div>
 
-  <!-- Error Message -->
   <div *ngIf="error" class="error-message">
     <span>❌</span>
     <span>{{ error }}</span>
   </div>
 
-  <!-- Streaming Progress -->
   <div *ngIf="streamMessages.length > 0" class="progress-section">
     <h3>Generation Progress</h3>
     <div class="progress-list">
@@ -59,7 +56,6 @@
     </div>
   </div>
 
-  <!-- Result Link -->
   <div *ngIf="productId" class="success-section">
     <div class="success-icon">🎉</div>
     <h3>Product Generated Successfully!</h3>

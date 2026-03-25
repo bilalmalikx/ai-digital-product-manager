@@ -2,19 +2,21 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { ProductGenerateRequest, StreamEvent } from '../../models/product';
+import { StreamEvent } from '../../models/product';
 import { Subscription } from 'rxjs';
 import { ProductService } from '../../services/product';
-import { Streaming } from '../../services/streaming';
+import { StreamingService } from '../../services/streaming';
+
 
 @Component({
   selector: 'app-product-generate',
-  imports: [RouterModule,CommonModule,FormsModule],
-  templateUrl: './product-generate.html',
-  styleUrl: './product-generate.scss',
+  standalone: true,
+  imports: [RouterModule, CommonModule, FormsModule],
+  templateUrl: './product-generate.component.html',
+  styleUrls: ['./product-generate.component.scss']
 })
-export class ProductGenerate {
-idea: string = '';
+export class ProductGenerateComponent implements OnInit, OnDestroy {
+  idea: string = '';
   isLoading: boolean = false;
   streamMessages: StreamEvent[] = [];
   productId: string | null = null;
@@ -23,7 +25,7 @@ idea: string = '';
 
   constructor(
     private productService: ProductService,
-    private streamingService: Streaming
+    private streamingService: StreamingService
   ) {}
 
   ngOnInit(): void {}
@@ -35,10 +37,6 @@ idea: string = '';
     this.streamMessages = [];
     this.productId = null;
     this.error = null;
-
-    const request: ProductGenerateRequest = {
-      idea: this.idea.trim()
-    };
 
     this.streamSubscription = this.streamingService.connectStream(this.idea.trim())
       .subscribe({
@@ -60,6 +58,7 @@ idea: string = '';
           }
         },
         error: (err) => {
+          console.error('Streaming error:', err);
           this.error = 'Connection error. Please try again.';
           this.isLoading = false;
         }
@@ -102,4 +101,3 @@ idea: string = '';
     this.cancelStream();
   }
 }
-
