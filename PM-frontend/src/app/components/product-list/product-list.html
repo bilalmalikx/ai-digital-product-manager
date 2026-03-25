@@ -1,1 +1,67 @@
-<p>product-list works!</p>
+<div class="product-list-container">
+  <div class="header">
+    <h1>My Products</h1>
+    <p>View and manage all your generated products</p>
+    <a routerLink="/generate" class="btn-primary">+ Generate New Product</a>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading products...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-state">
+    <div class="error-icon">⚠️</div>
+    <p>{{ error }}</p>
+    <button (click)="retry()" class="btn-secondary">Try Again</button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !error && products.length === 0" class="empty-state">
+    <div class="empty-icon">📦</div>
+    <h2>No products yet</h2>
+    <p>Generate your first product to get started!</p>
+    <a routerLink="/generate" class="btn-primary">Generate Product</a>
+  </div>
+
+  <!-- Products Grid -->
+  <div *ngIf="!isLoading && !error && products.length > 0" class="products-grid">
+    <div *ngFor="let product of products" class="product-card" [routerLink]="['/product', product.id]">
+      <div class="card-header">
+        <div class="product-icon">📄</div>
+        <div class="product-status" [class]="getStatusClass(product.status)">
+          {{ getStatusIcon(product.status) }} {{ product.status | titlecase }}
+        </div>
+      </div>
+      
+      <div class="card-content">
+        <h3 class="product-name">{{ product.name || 'Untitled Product' }}</h3>
+        <p class="product-idea">{{ product.idea | slice:0:100 }}{{ product.idea.length > 100 ? '...' : '' }}</p>
+      </div>
+      
+      <div class="card-footer">
+        <div class="product-date">
+          📅 {{ formatDate(product.created_at) }}
+        </div>
+        <div class="view-link">
+          View Details →
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && !error && total > limit" class="pagination">
+    <button (click)="previousPage()" [disabled]="skip === 0" class="page-btn">
+      ← Previous
+    </button>
+    <span class="page-info">
+      Page {{ (skip / limit) + 1 }} of {{ Math.ceil(total / limit) }}
+    </span>
+    <button (click)="nextPage()" [disabled]="skip + limit >= total" class="page-btn">
+      Next →
+    </button>
+  </div>
+</div>
