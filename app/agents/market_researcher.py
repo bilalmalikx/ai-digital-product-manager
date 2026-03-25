@@ -2,6 +2,7 @@ from app.agents.base import BaseAgent
 from app.prompts.market_researcher import market_researcher_template
 from app.state.schema import AgentState
 from app.tools.web_search import web_search_tool
+from typing import Dict, Any
 import json
 import logging
 

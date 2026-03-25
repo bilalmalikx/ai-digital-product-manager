@@ -1,5 +1,6 @@
 from app.agents.base import BaseAgent
 from app.prompts.tech_architect import tech_architect_template
+from typing import Dict, Any
 from app.state.schema import AgentState
 import json
 import logging

@@ -1,6 +1,7 @@
 from app.agents.base import BaseAgent
 from app.prompts.ux_designer import ux_designer_template
 from app.state.schema import AgentState
+from typing import Dict, Any
 import json
 import logging
 

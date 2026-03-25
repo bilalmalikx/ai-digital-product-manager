@@ -1,36 +1,40 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+from pydantic import ConfigDict
 import os
 
 class Settings(BaseSettings):
     """Application settings."""
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost:5432/product_agent")
+    DATABASE_URL: str = "postgresql+psycopg2://postgres:admin@localhost:5432/product_agent"
     
     # LLM
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY")
-    DEEPSEEK_API_KEY: Optional[str] = os.getenv("DEEPSEEK_API_KEY")
+    OPENAI_API_KEY: str = ""
+    ANTHROPIC_API_KEY: Optional[str] = None
+    DEEPSEEK_API_KEY: Optional[str] = None
     
     # LangSmith
-    LANGSMITH_API_KEY: Optional[str] = os.getenv("LANGSMITH_API_KEY")
-    LANGSMITH_PROJECT_NAME: str = os.getenv("LANGSMITH_PROJECT_NAME", "product_agent_system")
+    LANGSMITH_API_KEY: Optional[str] = None
+    LANGSMITH_PROJECT_NAME: str = "product_agent_system"
+    LANGSMITH_TRACING_V2: str = "true"
     
     # MCP Config
-    MCP_SERVER_URL: str = os.getenv("MCP_SERVER_URL", "http://localhost:8001")
+    MCP_SERVER_URL: str = "http://localhost:8001"
     
     # API Keys
-    TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
-    SERPAPI_API_KEY: Optional[str] = os.getenv("SERPAPI_API_KEY")
+    TAVILY_API_KEY: Optional[str] = None
+    SERPAPI_API_KEY: Optional[str] = None
     
     # Model Selection
-    DEFAULT_MODEL: str = os.getenv("DEFAULT_MODEL", "gpt-4o")
-    MODEL_PROVIDER: str = os.getenv("MODEL_PROVIDER", "openai")  # openai, anthropic, deepseek
+    DEFAULT_MODEL: str = "gpt-4o"
+    MODEL_PROVIDER: str = "openai"
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    # Pydantic v2 configuration
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"  # This allows extra env vars like LANGSMITH_TRACING_V2
+    )
 
 settings = Settings()
