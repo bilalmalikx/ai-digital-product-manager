@@ -1,66 +1,121 @@
-<div class="product-generate-container">
-  <div class="header">
-    <h1>Generate Product</h1>
-    <p>Enter your product idea and let our AI agents create complete product documentation</p>
+<div class="generate-page">
+  <div class="gen-hero fade-up">
+    <div class="gen-badge">
+      <span class="status-dot-mini"></span>
+      AI-Powered PRD Generator
+    </div>
+    <h1 class="gen-title">Turn ideas into<br/><span>complete products</span></h1>
+    <p class="gen-sub">Describe your product idea and our AI pipeline will generate strategy, market research, PRD, tech architecture, UX design, and QA strategy.</p>
   </div>
 
-  <div class="form-section">
-    <label class="form-label">Product Idea</label>
-    <textarea 
-      [(ngModel)]="idea"
-      class="form-textarea"
-      rows="5"
-      placeholder="Example: Build an enterprise-level project management tool with Angular..."
-      [disabled]="isLoading"></textarea>
-    
-    <div class="button-group">
-      <button 
-        (click)="generateWithStreaming()"
-        [disabled]="!idea.trim() || isLoading"
-        class="btn btn-primary">
-        {{ isLoading ? 'Generating...' : 'Generate Product' }}
-      </button>
-      
-      <button 
-        *ngIf="isLoading"
-        (click)="cancelStream()"
-        class="btn btn-danger">
-        Cancel
+  <div class="gen-input-wrap fade-up-d1">
+    <div class="gen-input-header">
+      <span>~/forge</span>
+      <span>$</span>
+      <span>describe_product.idea</span>
+    </div>
+    <textarea [(ngModel)]="idea" placeholder="e.g. A SaaS platform for freelancers to manage clients, invoices, and projects in one place with AI-powered time tracking and financial insights..." rows="4"></textarea>
+    <div class="gen-input-footer">
+      <span class="gen-char-count">{{ idea.length }} chars</span>
+      <button class="gen-submit" [class.loading]="isLoading" (click)="generateWithStreaming()" [disabled]="!idea.trim() || isLoading">
+        <div class="spin"></div>
+        <span class="btn-txt">⚡ Generate Product</span>
       </button>
     </div>
   </div>
 
-  <div *ngIf="error" class="error-message">
-    <span>❌</span>
-    <span>{{ error }}</span>
+  <!-- Agent pipeline cards -->
+  <div class="pipeline fade-up-d2">
+    <div class="agent-card" [class.running]="isAgentRunning('strategist')" [class.done]="isAgentDone('strategist')" [class.error]="hasAgentError('strategist')">
+      <div class="agent-icon">📊</div>
+      <div class="agent-name">Strategist</div>
+      <div class="agent-status" [class.running]="isAgentRunning('strategist')" [class.done]="isAgentDone('strategist')">
+        {{ getAgentStatus('strategist') }}
+      </div>
+      <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('strategist')"></div></div>
+    </div>
+    <div class="agent-card" [class.running]="isAgentRunning('market_research')" [class.done]="isAgentDone('market_research')">
+      <div class="agent-icon">🔍</div>
+      <div class="agent-name">Market Research</div>
+      <div class="agent-status" [class.running]="isAgentRunning('market_research')" [class.done]="isAgentDone('market_research')">
+        {{ getAgentStatus('market_research') }}
+      </div>
+      <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('market_research')"></div></div>
+    </div>
+    <div class="agent-card" [class.running]="isAgentRunning('prd')" [class.done]="isAgentDone('prd')">
+      <div class="agent-icon">📋</div>
+      <div class="agent-name">PRD Writer</div>
+      <div class="agent-status" [class.running]="isAgentRunning('prd')" [class.done]="isAgentDone('prd')">
+        {{ getAgentStatus('prd') }}
+      </div>
+      <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('prd')"></div></div>
+    </div>
+    <div class="agent-card" [class.running]="isAgentRunning('tech_architecture')" [class.done]="isAgentDone('tech_architecture')">
+      <div class="agent-icon">🏗️</div>
+      <div class="agent-name">Tech Architecture</div>
+      <div class="agent-status" [class.running]="isAgentRunning('tech_architecture')" [class.done]="isAgentDone('tech_architecture')">
+        {{ getAgentStatus('tech_architecture') }}
+      </div>
+      <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('tech_architecture')"></div></div>
+    </div>
+    <div class="agent-card" [class.running]="isAgentRunning('ux_design')" [class.done]="isAgentDone('ux_design')">
+      <div class="agent-icon">🎨</div>
+      <div class="agent-name">UX Design</div>
+      <div class="agent-status" [class.running]="isAgentRunning('ux_design')" [class.done]="isAgentDone('ux_design')">
+        {{ getAgentStatus('ux_design') }}
+      </div>
+      <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('ux_design')"></div></div>
+    </div>
+    <div class="agent-card" [class.running]="isAgentRunning('qa_strategy')" [class.done]="isAgentDone('qa_strategy')">
+      <div class="agent-icon">🧪</div>
+      <div class="agent-name">QA Strategy</div>
+      <div class="agent-status" [class.running]="isAgentRunning('qa_strategy')" [class.done]="isAgentDone('qa_strategy')">
+        {{ getAgentStatus('qa_strategy') }}
+      </div>
+      <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('qa_strategy')"></div></div>
+    </div>
   </div>
 
-  <div *ngIf="streamMessages.length > 0" class="progress-section">
-    <h3>Generation Progress</h3>
-    <div class="progress-list">
-      <div *ngFor="let msg of streamMessages; let i = index" 
-           class="progress-item" [class.complete]="msg.type === 'complete'">
-        <div class="progress-icon">{{ getMessageIcon(msg.type) }}</div>
-        <div class="progress-content">
-          <div class="progress-message">{{ msg.message }}</div>
-          <div *ngIf="msg.agent" class="progress-agent">
-            {{ getAgentName(msg.agent) }}
-          </div>
-        </div>
+  <!-- Terminal log -->
+  <div class="terminal fade-up-d2">
+    <div class="terminal-header">
+      <div class="term-dot red"></div>
+      <div class="term-dot yellow"></div>
+      <div class="term-dot green"></div>
+      <span>pipeline.log — ProductForge AI</span>
+    </div>
+    <div class="terminal-body" #terminalBody>
+      <div class="log-line" *ngFor="let msg of logMessages">
+        <span class="log-time">{{ msg.time }}</span>
+        <span class="log-msg" [ngClass]="msg.type">{{ msg.text }}</span>
+      </div>
+      <div class="log-line" *ngIf="isLoading">
+        <span class="log-time">{{ currentTime }}</span>
+        <span class="log-msg default"><span class="cursor"></span></span>
       </div>
     </div>
-    
-    <div *ngIf="isLoading" class="loading-spinner">
-      <div class="spinner"></div>
-      <span>Processing...</span>
+  </div>
+
+  <!-- PRD streaming output -->
+  <div class="prd-stream" [class.visible]="prdContent">
+    <div class="prd-stream-header">
+      <div class="prd-stream-title">
+        📄 <span>final_prd_document.md</span>
+      </div>
+      <div class="prd-live-badge" [class.complete]="prdComplete">
+        <div class="prd-live-dot" *ngIf="!prdComplete"></div>
+        {{ prdComplete ? '✓ COMPLETE' : 'LIVE' }}
+      </div>
+    </div>
+    <div class="prd-content" #prdContentEl>
+      {{ prdContent }}
     </div>
   </div>
 
-  <div *ngIf="productId" class="success-section">
-    <div class="success-icon">🎉</div>
-    <h3>Product Generated Successfully!</h3>
-    <a [routerLink]="['/product', productId]" class="btn btn-success">
-      View Product Details →
-    </a>
+  <!-- Error message -->
+  <div class="error-message" *ngIf="error">
+    <span class="error-icon">❌</span>
+    <span>{{ error }}</span>
+    <button class="retry-btn" (click)="generateWithStreaming()">Retry</button>
   </div>
 </div>

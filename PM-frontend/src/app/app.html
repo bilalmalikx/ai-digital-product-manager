@@ -1,15 +1,118 @@
-<nav class="navbar">
-  <div class="nav-container">
-    <div class="nav-brand">
-      <a routerLink="/">Product Manager</a>
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">⚡</div>
+      <div class="sb-logo-text">Product<span>Forge</span></div>
     </div>
-    <div class="nav-links">
-      <a routerLink="/generate" routerLinkActive="active">Generate Product</a>
-      <a routerLink="/products" routerLinkActive="active">My Products</a>
+    <nav class="sb-nav">
+      <div class="sb-section">Workspace</div>
+      <a class="sb-item" routerLink="/generate" routerLinkActive="active">
+        <span class="sb-icon">✦</span><span>Generate</span>
+      </a>
+      <a class="sb-item" routerLink="/products" routerLinkActive="active">
+        <span class="sb-icon">◫</span><span>Products</span>
+        <span class="sb-badge green" id="productCountBadge">{{ productCount }}</span>
+      </a>
+      <div class="sb-section">System</div>
+      <div class="sb-item" (click)="toggleSettings()">
+        <span class="sb-icon">◈</span><span>Settings</span>
+      </div>
+      <div class="sb-item" (click)="toggleApiDocs()">
+        <span class="sb-icon">⊞</span><span>API Docs</span>
+        <span class="sb-badge blue">v1</span>
+      </div>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-api-status">
+        <div class="status-dot" [class.online]="apiOnline" [class.offline]="!apiOnline && !mockMode" [class.mock]="mockMode"></div>
+        <span>{{ apiOnline ? 'API connected' : (mockMode ? 'Mock mode' : 'API offline') }}</span>
+      </div>
+      <div class="api-url">{{ apiUrl }}</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-breadcrumb">
+          <span class="crumb">ProductForge</span>
+          <span class="separator">/</span>
+          <span class="current">{{ currentRoute }}</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="top-btn" routerLink="/products">◫ All Products</button>
+        <button class="top-btn primary" routerLink="/generate">✦ New Product</button>
+      </div>
+    </div>
+
+    <router-outlet></router-outlet>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" [class.open]="settingsOpen" (click)="closeModals()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Settings</div>
+      <button class="modal-close" (click)="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Base URL</label>
+        <input class="form-input" [(ngModel)]="settings.baseUrl" placeholder="http://localhost:8000"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Prefix</label>
+        <input class="form-input" [(ngModel)]="settings.prefix" placeholder="/api/v1"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Auth Token (optional)</label>
+        <input class="form-input" [(ngModel)]="settings.token" placeholder="Bearer ..."/>
+      </div>
+      <div class="toggle-row">
+        <span>Mock mode (no API)</span>
+        <div class="toggle" [class.on]="settings.mock" (click)="settings.mock = !settings.mock"></div>
+      </div>
+      <button class="save-btn" (click)="saveSettings()">Save & Reconnect</button>
     </div>
   </div>
-</nav>
+</div>
 
-<main class="main-content">
-  <router-outlet></router-outlet>
-</main>
+<!-- API Docs Modal -->
+<div class="modal-overlay" [class.open]="apiDocsOpen" (click)="closeModals()">
+  <div class="modal modal-wide" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">📘 API Reference</div>
+      <button class="modal-close" (click)="closeModals()">✕</button>
+    </div>
+    <div class="modal-body api-docs-body">
+      <div class="endpoint-section">
+        <h4>🔗 Endpoints</h4>
+        <div class="endpoint" *ngFor="let ep of endpoints">
+          <div class="endpoint-method" [style.color]="methodColor(ep.method)">{{ ep.method }}</div>
+          <code class="endpoint-path">{{ apiPrefix }}{{ ep.path }}</code>
+          <div class="endpoint-desc">{{ ep.desc }}</div>
+          <div class="endpoint-details" *ngIf="ep.params">Params: {{ ep.params }}</div>
+          <div class="endpoint-details" *ngIf="ep.body">Body: {{ ep.body }}</div>
+          <div class="endpoint-response">→ {{ ep.response }}</div>
+        </div>
+      </div>
+      <div class="events-section">
+        <h4>📡 SSE Event Types</h4>
+        <div class="event" *ngFor="let ev of sseEvents">
+          <code class="event-type">{{ ev.type }}</code>
+          <div class="event-desc">{{ ev.desc }}</div>
+          <div class="event-fields" *ngIf="ev.fields">{{ ev.fields }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" [class.show]="toastMessage" [class]="toastType">
+  <span>{{ toastMessage }}</span>
+</div>

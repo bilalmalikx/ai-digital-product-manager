@@ -1,52 +1,97 @@
-<div class="product-list-container">
-  <div class="header">
-    <h1>My Products</h1>
-    <p>View and manage all your generated products</p>
-    <a routerLink="/generate" class="btn-primary">+ Generate New Product</a>
+<div class="products-page">
+  <div class="products-header fade-up">
+    <div class="products-header-left">
+      <h2>Products</h2>
+      <p>// {{ products.length }} products generated</p>
+    </div>
+    <button class="top-btn primary" routerLink="/generate">✦ New Product</button>
   </div>
 
-  <div *ngIf="isLoading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading products...</p>
-  </div>
-
-  <div *ngIf="error" class="error-state">
-    <div class="error-icon">⚠️</div>
-    <p>{{ error }}</p>
-    <button (click)="retry()" class="btn-secondary">Try Again</button>
-  </div>
-
-  <div *ngIf="!isLoading && !error && products.length === 0" class="empty-state">
-    <div class="empty-icon">📦</div>
-    <h2>No products yet</h2>
-    <p>Generate your first product to get started!</p>
-    <a routerLink="/generate" class="btn-primary">Generate Product</a>
-  </div>
-
-  <div *ngIf="!isLoading && !error && products.length > 0" class="products-grid">
-    <div *ngFor="let product of products" class="product-card" [routerLink]="['/product', product.id]">
-      <div class="card-header">
-        <div class="product-icon">📄</div>
-        <div class="product-status" [class]="getStatusClass(product.status)">
-          {{ getStatusIcon(product.status) }} {{ product.status | titlecase }}
-        </div>
-      </div>
-      
-      <div class="card-content">
-        <h3 class="product-name">{{ product.name || 'Untitled Product' }}</h3>
-        <p class="product-idea">{{ product.idea | slice:0:100 }}{{ product.idea.length > 100 ? '...' : '' }}</p>
-      </div>
-      
-      <div class="card-footer">
-        <div class="product-date">📅 {{ formatDate(product.created_at) }}</div>
-        <div class="view-link">View Details →</div>
-      </div>
+  <div class="stats-row fade-up-d1">
+    <div class="stat-mini">
+      <div class="stat-mini-val green">{{ total }}</div>
+      <div class="stat-mini-label">Total</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-val cyan">{{ getCountByStatus('in_review') }}</div>
+      <div class="stat-mini-label">In Review</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-val blue">{{ getCountByStatus('completed') + getCountByStatus('approved') }}</div>
+      <div class="stat-mini-label">Completed</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-val violet">{{ getCountByStatus('pending') + getCountByStatus('draft') }}</div>
+      <div class="stat-mini-label">Pending</div>
     </div>
   </div>
 
-  <div *ngIf="!isLoading && !error && total > limit" class="pagination">
-    <button (click)="previousPage()" [disabled]="skip === 0" class="page-btn">← Previous</button>
-    <span class="page-info">Page {{ (skip / limit) + 1 }} of {{ Math.ceil(total / limit) }}</span>
-    <button (click)="nextPage()" [disabled]="skip + limit >= total" class="page-btn">Next →</button>
+  <div class="filters fade-up-d2">
+    <input class="filter-input" placeholder="🔍 Search products..." [(ngModel)]="searchTerm" (input)="filterProducts()"/>
+    <select class="filter-select" [(ngModel)]="statusFilter" (change)="filterProducts()">
+      <option value="">All Status</option>
+      <option value="draft">Draft</option>
+      <option value="in_review">In Review</option>
+      <option value="approved">Approved</option>
+      <option value="completed">Completed</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <button class="top-btn" (click)="loadProducts()">↻ Refresh</button>
+  </div>
+
+  <div class="products-grid" *ngIf="!isLoading; else skeletonLoader">
+    <div class="product-card" *ngFor="let product of filteredProducts" (click)="viewProduct(product.id)">
+      <div class="pc-top">
+        <div class="pc-icon">{{ getProductEmoji(product.name || product.idea) }}</div>
+        <span class="pc-status-badge" [ngClass]="getStatusClass(product.status)">
+          {{ product.status | titlecase }}
+        </span>
+      </div>
+      <div class="pc-name">{{ truncate(product.name || product.idea || 'Untitled', 55) }}</div>
+      <div class="pc-idea">{{ truncate(product.idea || 'No description', 80) }}</div>
+      <div class="pc-chips">
+        <span class="chip" [class.filled-green]="product.strategist_output">Strategist</span>
+        <span class="chip" [class.filled-blue]="product.market_research_output">Market</span>
+        <span class="chip" [class.filled-violet]="product.prd_output">PRD</span>
+        <span class="chip" [class.filled-cyan]="product.tech_architecture">Tech</span>
+        <span class="chip" [class.filled-amber]="product.ux_design">UX</span>
+        <span class="chip" [class.filled-green]="product.qa_strategy">QA</span>
+      </div>
+      <div class="pc-meta">
+        <span>{{ formatDate(product.created_at) }}</span>
+        <div class="pc-meta-right">
+          <button class="pc-action primary" (click)="$event.stopPropagation(); viewProduct(product.id)">View →</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="empty-state" *ngIf="filteredProducts.length === 0">
+      <div class="empty-state-icon">◫</div>
+      <h3>No products found</h3>
+      <p>{{ searchTerm || statusFilter ? 'Try adjusting your filters.' : 'Generate your first product to get started.' }}</p>
+      <button routerLink="/generate">✦ Generate Now</button>
+    </div>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button class="page-btn" (click)="previousPage()" [disabled]="skip === 0">← Previous</button>
+    <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+    <button class="page-btn" (click)="nextPage()" [disabled]="skip + limit >= total">Next →</button>
   </div>
 </div>
+
+<ng-template #skeletonLoader>
+  <div class="products-grid">
+    <div class="product-card skeleton-card" *ngFor="let _ of [].constructor(6)">
+      <div class="skeleton" style="width: 40px; height: 40px; border-radius: 10px;"></div>
+      <div class="skeleton" style="height: 14px; width: 80%; margin: 0.5rem 0;"></div>
+      <div class="skeleton" style="height: 10px; width: 60%;"></div>
+      <div class="skeleton-chips">
+        <div class="skeleton" style="height: 18px; width: 50px;"></div>
+        <div class="skeleton" style="height: 18px; width: 40px;"></div>
+      </div>
+      <div class="skeleton" style="height: 1px; width: 100%; margin: 0.8rem 0;"></div>
+      <div class="skeleton" style="height: 10px; width: 40%;"></div>
+    </div>
+  </div>
+</ng-template>

@@ -1,27 +1,37 @@
+// product-detail.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Product } from '../../models/product';
 import { ProductService } from '../../services/product';
 
 @Component({
   selector: 'app-product-detail',
-  standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './product-detail.component.html',
-  styleUrls: ['./product-detail.component.scss']
+  templateUrl: './product-detail.html',
+  styleUrl: './product-detail.scss'
 })
 export class ProductDetailComponent implements OnInit {
   product: Product | null = null;
   isLoading: boolean = true;
   error: string | null = null;
   activeTab: string = 'overview';
-
+  
+  pipelineStages = [
+    { name: 'Strategist', key: 'strategist_output' },
+    { name: 'Market Research', key: 'market_research_output' },
+    { name: 'PRD', key: 'prd_output' },
+    { name: 'Tech Architecture', key: 'tech_architecture' },
+    { name: 'UX Design', key: 'ux_design' },
+    { name: 'QA Strategy', key: 'qa_strategy' }
+  ];
+  
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private productService: ProductService
   ) {}
-
+  
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       const productId = params['id'];
@@ -30,7 +40,17 @@ export class ProductDetailComponent implements OnInit {
       }
     });
   }
-
+  
+  // Add this getter to provide completed stages with 'completed' property
+  get completedStages(): { name: string, completed: boolean, key: string }[] {
+    if (!this.product) return [];
+    return this.pipelineStages.map(stage => ({
+      name: stage.name,
+      key: stage.key,
+      completed: !!this.product?.[stage.key as keyof Product]
+    }));
+  }
+  
   loadProduct(productId: string): void {
     this.isLoading = true;
     this.productService.getProduct(productId).subscribe({
@@ -49,27 +69,18 @@ export class ProductDetailComponent implements OnInit {
       }
     });
   }
-
+  
   getStatusClass(status: string): string {
     switch(status) {
       case 'draft': return 'status-draft';
-      case 'in_review': return 'status-review';
+      case 'in_review': return 'status-in_review';
       case 'approved': return 'status-approved';
+      case 'completed': return 'status-completed';
       case 'rejected': return 'status-rejected';
       default: return 'status-draft';
     }
   }
-
-  getStatusIcon(status: string): string {
-    switch(status) {
-      case 'draft': return '📝';
-      case 'in_review': return '🔍';
-      case 'approved': return '✅';
-      case 'rejected': return '❌';
-      default: return '📌';
-    }
-  }
-
+  
   formatDate(date: Date): string {
     return new Date(date).toLocaleString('en-US', {
       year: 'numeric',
@@ -79,16 +90,22 @@ export class ProductDetailComponent implements OnInit {
       minute: '2-digit'
     });
   }
-
+  
+  truncateId(id: string): string {
+    if (!id) return '';
+    return id.length > 18 ? id.substring(0, 18) + '...' : id;
+  }
+  
   setActiveTab(tab: string): void {
     this.activeTab = tab;
   }
-
+  
   copyToClipboard(text: string): void {
-    navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
+    navigator.clipboard.writeText(text).then(() => {
+      console.log('Copied to clipboard');
+    });
   }
-
+  
   downloadPRD(): void {
     if (this.product?.final_prd) {
       const blob = new Blob([this.product.final_prd], { type: 'text/markdown' });
@@ -100,23 +117,13 @@ export class ProductDetailComponent implements OnInit {
       window.URL.revokeObjectURL(url);
     }
   }
-
-  getOutputKeys(output: any): string[] {
-    return output ? Object.keys(output) : [];
+  
+  formatOutput(output: any): string {
+    if (!output) return '';
+    return JSON.stringify(output, null, 2);
   }
-
-  formatValue(value: any): string {
-    if (typeof value === 'object') {
-      return JSON.stringify(value, null, 2);
-    }
-    return String(value);
-  }
-
-  retry(): void {
-    this.error = null;
-    const productId = this.route.snapshot.params['id'];
-    if (productId) {
-      this.loadProduct(productId);
-    }
+  
+  goBack(): void {
+    this.router.navigate(['/products']);
   }
 }
