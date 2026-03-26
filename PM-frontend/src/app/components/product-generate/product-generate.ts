@@ -76,38 +76,99 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
     this.cancelStream();
   }
   
-  generateWithStreaming(): void {
-    if (!this.idea.trim() || this.isLoading) return;
-    
-    this.isLoading = true;
-    this.error = null;
-    this.prdContent = '';
-    this.prdComplete = false;
-    this.productId = null;
-    this.logMessages = [];
-    this.logStartTime = Date.now();
-    
-    // Reset agent states
-    Object.keys(this.agentStates).forEach(key => {
-      this.agentStates[key] = { status: 'idle', progress: 0 };
-    });
-    
-    this.addLog('info', `Starting generation pipeline for: "${this.idea.substring(0, 60)}..."`);
-    
-    this.streamSubscription = this.streamingService.connectStream(this.idea.trim())
-      .subscribe({
-        next: (event: StreamEvent) => this.handleSSEEvent(event),
-        error: (err) => {
-          console.error('Streaming error:', err);
-          this.addLog('error', 'Connection error. Please try again.');
-          this.error = 'Connection error. Please try again.';
-          this.isLoading = false;
-        },
-        complete: () => {
-          this.isLoading = false;
-        }
-      });
+generateWithStreaming(): void {
+  if (!this.idea.trim() || this.isLoading) return;
+
+  this.isLoading = true;
+  this.error = null;
+  this.prdContent = '';
+  this.prdComplete = false;
+  this.productId = null;
+  this.logMessages = [];
+  this.logStartTime = Date.now();
+
+  // Reset agent states
+  Object.keys(this.agentStates).forEach(key => {
+    this.agentStates[key] = { status: 'idle', progress: 0 };
+  });
+
+  this.addLog('info', `Starting generation pipeline for: "${this.idea.substring(0, 60)}..."`);
+
+  const request = { idea: this.idea.trim() };
+
+  // 👇 FAKE AGENT FLOW (since no streaming now)
+  const agents = Object.keys(this.agentStates);
+  let currentIndex = 0;
+
+  const runNextAgent = () => {
+    if (currentIndex >= agents.length) {
+      this.callFinalAPI(request);
+      return;
+    }
+
+    const agent = agents[currentIndex];
+
+    // Start agent
+    this.agentStates[agent].status = 'running';
+    this.agentStates[agent].progress = 30;
+    this.addLog('info', `Starting ${agent}...`);
+
+    setTimeout(() => {
+      // Complete agent
+      this.agentStates[agent].status = 'done';
+      this.agentStates[agent].progress = 100;
+      this.addLog('success', `${agent} complete`);
+
+      currentIndex++;
+      runNextAgent();
+    }, 800); // speed adjust kar sakte ho
+  };
+
+  runNextAgent();
+}
+
+
+// 👇 FINAL API CALL
+private callFinalAPI(request: any): void {
+  this.addLog('info', 'Generating final PRD...');
+
+this.productService.generateProduct(request).subscribe({
+  next: (res) => {
+    console.log('API Response:', res);
+
+    this.productId = res.product_id || res.data?.id || null;
+
+    // ✅ FIXED
+    const prd = res?.data?.final_prd || '';
+
+    // Typewriter effect
+    let i = 0;
+    const speed = 5;
+
+    const typeWriter = () => {
+      if (i < prd.length) {
+        this.prdContent += prd.charAt(i);
+        i++;
+        setTimeout(typeWriter, speed);
+      } else {
+        this.prdComplete = true;
+        this.addLog('success', 'PRD complete');
+        this.addLog('success', 'Generation complete!');
+        this.isLoading = false;
+      }
+    };
+
+    typeWriter();
+  },
+
+  error: (err) => {
+    console.error('API Error:', err);
+    this.addLog('error', 'Failed to generate product');
+    this.error = 'Failed to generate product. Please try again.';
+    this.isLoading = false;
   }
+});
+}
   
   private handleSSEEvent(event: StreamEvent): void {
     switch (event.type) {
