@@ -45,6 +45,7 @@ A production-grade **Multi-Agent AI System** that converts a startup idea into a
 - FastAPI
 - LangChain
 - LangGraph
+- MCP
 - PostgreSQL
 - SQLAlchemy 2.0 (Async)
 - Alembic
