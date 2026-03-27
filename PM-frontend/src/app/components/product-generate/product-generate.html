@@ -96,6 +96,24 @@
     </div>
   </div>
 
+  <!-- Live JSON Output Box -->
+<div class="live-output-box" *ngIf="showLiveOutput && currentAgentOutput">
+  <div class="live-output-header">
+    <div class="live-output-title">
+      <span class="live-icon">📡</span>
+      <span>Live JSON Output: {{ currentAgentName }}</span>
+    </div>
+    <div class="live-badge">
+      <div class="pulse-dot"></div>
+      STREAMING
+    </div>
+  </div>
+  <div class="live-output-content" #liveOutputEl>
+    <pre class="json-output" [innerHTML]="currentAgentOutput"></pre>
+    <div class="cursor-blink" *ngIf="!prdComplete"></div>
+  </div>
+</div>
+
   <!-- PRD streaming output -->
   <div class="prd-stream" [class.visible]="prdContent">
     <div class="prd-stream-header">

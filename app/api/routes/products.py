@@ -38,11 +38,12 @@ async def generate_product(
             product_id=request.product_id
         )
         
+        # Return the complete response with all agent outputs
         return ProductGenerateResponse(
             success=True,
             product_id=UUID(result["product_id"]) if result.get("product_id") else None,
             message="Product generated successfully",
-            data=result.get("outputs")
+            data=result.get("outputs")  # This contains all agent outputs
         )
         
     except Exception as e:
@@ -51,45 +52,6 @@ async def generate_product(
             success=False,
             error=str(e)
         )
-
-
-@router.get("/generate-stream")
-async def generate_product_stream(
-    idea: str,
-    product_id: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Generate product with real-time streaming updates."""
-    
-    async def event_generator():
-        try:
-            service = ProductService(db)
-            
-            # Start stream
-            yield f"data: {json.dumps({'type': 'start', 'message': '🚀 Starting product generation...'})}\n\n"
-            await asyncio.sleep(0.1)
-            
-            # Stream each agent's output
-            async for event in service.generate_product_stream(idea, product_id):
-                yield f"data: {json.dumps(event)}\n\n"
-                await asyncio.sleep(0.05)
-            
-            # End stream
-            yield f"data: {json.dumps({'type': 'end', 'message': '✅ Product generation complete!'})}\n\n"
-            
-        except Exception as e:
-            logger.error(f"Streaming error: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
-    
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"
-        }
-    )
 
 
 @router.get("/{product_id}", response_model=ProductAPIResponse)

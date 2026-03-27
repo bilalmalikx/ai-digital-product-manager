@@ -1,19 +1,20 @@
 // product-list.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms'; // Add FormsModule import
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { filter, Subscription } from 'rxjs';
 import { Product } from '../../models/product';
 import { ProductService } from '../../services/product';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule], // Add FormsModule here
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss'
 })
-export class ProductListComponent implements OnInit {
+export class ProductListComponent implements OnInit, OnDestroy {
   products: Product[] = [];
   filteredProducts: Product[] = [];
   isLoading: boolean = true;
@@ -23,11 +24,28 @@ export class ProductListComponent implements OnInit {
   
   searchTerm: string = '';
   statusFilter: string = '';
+  private routerSubscription: Subscription;
   
-  constructor(private productService: ProductService, private router: Router) {}
+  constructor(private productService: ProductService, private router: Router) {
+    // Listen to route changes to reload products when coming back from detail
+    this.routerSubscription = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      if (event.url === '/products') {
+        console.log('Returned to products list, reloading...');
+        this.loadProducts();
+      }
+    });
+  }
   
   ngOnInit(): void {
     this.loadProducts();
+  }
+  
+  ngOnDestroy(): void {
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
   }
   
   get totalPages(): number {
@@ -42,6 +60,7 @@ export class ProductListComponent implements OnInit {
     this.isLoading = true;
     this.productService.getProducts(this.skip, this.limit).subscribe({
       next: (response: any) => {
+        console.log('Products loaded:', response);
         this.products = response.products || [];
         this.total = response.total || 0;
         this.filterProducts();
@@ -116,7 +135,16 @@ export class ProductListComponent implements OnInit {
   }
   
   viewProduct(id: string): void {
-    this.router.navigate(['/products', id]);
+    console.log('Navigating to product detail:', id);
+    // Use navigateByUrl for more reliable navigation
+    this.router.navigateByUrl(`/products/${id}`).then(success => {
+      console.log('Navigation result:', success);
+      if (!success) {
+        console.error('Navigation failed');
+      }
+    }).catch(err => {
+      console.error('Navigation error:', err);
+    });
   }
   
   previousPage(): void {

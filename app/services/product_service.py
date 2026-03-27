@@ -1,3 +1,4 @@
+# app/services/product_service.py
 from sqlalchemy.orm import Session
 from app.models.product import Product, ProductStatus
 from app.models.session import Session as SessionModel
@@ -9,6 +10,7 @@ import logging
 import asyncio
 from typing import Dict, Any, Optional
 from datetime import datetime
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +87,7 @@ class ProductService:
             self.db.commit()
             self.db.refresh(product)
             
+            # Return all outputs in a structured format
             return {
                 "product_id": str(product.id),
                 "status": product.status.value if hasattr(product.status, 'value') else product.status,
@@ -157,10 +160,10 @@ class ProductService:
                     "message": message
                 }
                 
-                # Simulate agent work (you can replace with actual agent calls)
-                await asyncio.sleep(1.5)  # Simulate processing time
+                # Simulate agent work
+                await asyncio.sleep(1.5)
                 
-                # Mock output - replace with actual agent output
+                # Mock output
                 mock_output = {
                     "status": "completed",
                     "timestamp": datetime.utcnow().isoformat(),
@@ -206,13 +209,12 @@ class ProductService:
                     "outputs": all_outputs.copy()
                 }
             
-            # Generate final PRD with word-by-word streaming
+            # Generate final PRD
             yield {
                 "type": "generating_final",
                 "message": "📝 Generating final PRD document..."
             }
             
-            # Generate PRD content
             prd_content = f"""
 # Product Requirements Document
 
@@ -259,7 +261,7 @@ The system will be built using:
                     "chunk": chunk,
                     "message": f"📝 {chunk[:50]}..." if i % 10 == 0 else None
                 }
-                await asyncio.sleep(0.03)  # Simulate streaming
+                await asyncio.sleep(0.03)
             
             # Save final PRD
             product.final_prd = prd_content
@@ -301,7 +303,8 @@ The system will be built using:
             from uuid import UUID
             product_uuid = UUID(product_id)
             product = self.db.query(Product).filter(Product.id == product_uuid).first()
-        except:
+        except Exception as e:
+            logger.error(f"Error parsing product_id: {e}")
             return None
             
         if not product:

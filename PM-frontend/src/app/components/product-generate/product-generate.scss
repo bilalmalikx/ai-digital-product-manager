@@ -480,3 +480,230 @@ textarea::placeholder {
     grid-template-columns: 1fr;
   }
 }
+
+// Add to product-generate.scss
+
+.live-output-box {
+  max-width: 760px;
+  margin: 0 auto 1.5rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.live-output-header {
+  padding: 0.65rem 1.1rem;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.live-output-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.live-icon {
+  font-size: 1rem;
+}
+
+.live-badge {
+  background: var(--cyan-dim);
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  animation: pulse 1s infinite;
+}
+
+.live-output-content {
+  padding: 1.2rem;
+  max-height: 400px;
+  overflow-y: auto;
+  background: var(--bg);
+  position: relative;
+}
+
+.output-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--white2);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 2px;
+  height: 1.2rem;
+  background: var(--green);
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+// Add to product-generate.scss
+
+.json-output {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.json-output ::ng-deep .json-key {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+.json-output ::ng-deep .json-string {
+  color: var(--green);
+}
+
+.json-output ::ng-deep .json-number {
+  color: var(--violet);
+}
+
+.json-output ::ng-deep .json-boolean {
+  color: var(--amber);
+}
+
+.json-output ::ng-deep .json-null {
+  color: var(--rose);
+}
+
+.live-output-box {
+  max-width: 760px;
+  margin: 0 auto 1.5rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.live-output-header {
+  padding: 0.65rem 1.1rem;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.live-output-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.live-icon {
+  font-size: 1rem;
+}
+
+.live-badge {
+  background: var(--cyan-dim);
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  animation: pulse 1s infinite;
+}
+
+.live-output-content {
+  padding: 1.2rem;
+  max-height: 500px;
+  overflow-y: auto;
+  background: var(--bg);
+  position: relative;
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 2px;
+  height: 1.2rem;
+  background: var(--green);
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
