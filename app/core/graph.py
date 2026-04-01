@@ -6,6 +6,7 @@ from app.agents.prd_writer import create_prd_writer_node
 from app.agents.tech_architect import create_tech_architect_node
 from app.agents.ux_designer import create_ux_designer_node
 from app.agents.qa_engineer import create_qa_engineer_node
+from app.agents.final_prd_writer import FinalPRDWriterAgent
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ def build_graph():
     tech_architect_node = create_tech_architect_node()
     ux_designer_node = create_ux_designer_node()
     qa_engineer_node = create_qa_engineer_node()
+    final_prd_writer_node = FinalPRDWriterAgent()
     
     # Build workflow
     workflow = StateGraph(AgentState)
@@ -31,6 +33,7 @@ def build_graph():
     workflow.add_node("tech_architect", tech_architect_node)
     workflow.add_node("ux_designer", ux_designer_node)
     workflow.add_node("qa_engineer", qa_engineer_node)
+    workflow.add_node("final_prd_writer", final_prd_writer_node)
     
     # Set entry point
     workflow.set_entry_point("strategist")
@@ -41,8 +44,9 @@ def build_graph():
     workflow.add_edge("prd_writer", "tech_architect")
     workflow.add_edge("tech_architect", "ux_designer")
     workflow.add_edge("ux_designer", "qa_engineer")
-    workflow.add_edge("qa_engineer", END)
+    workflow.add_edge("qa_engineer", "final_prd_writer")
+    workflow.add_edge("final_prd_writer", END)
     
-    logger.info("Graph built successfully with 6 agents")
+    logger.info("Graph built successfully with 7 agents")
     
     return workflow.compile()
