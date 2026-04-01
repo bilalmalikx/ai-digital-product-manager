@@ -12,8 +12,31 @@ export class ProductService {
 
   constructor(private http: HttpClient) {}
 
+  // Existing method - simple text input
   generateProduct(request: ProductGenerateRequest): Observable<ProductResponse> {
     return this.http.post<ProductResponse>(`${this.apiUrl}/generate`, request);
+  }
+
+  // NEW: Multi-format file upload method
+  generateProductFromFiles(formData: FormData): Observable<ProductResponse> {
+    return this.http.post<ProductResponse>(`${this.apiUrl}/generate-from-files`, formData);
+  }
+
+  // NEW: Streaming with file upload
+  generateProductFromFilesStream(formData: FormData): Observable<EventSource> {
+    // For streaming, you'll need to implement EventSource or WebSocket
+    // This is a placeholder - actual implementation depends on your streaming method
+    const eventSource = new EventSource(`${this.apiUrl}/generate-from-files-stream?${new URLSearchParams(formData as any).toString()}`);
+    return new Observable(observer => {
+      eventSource.onmessage = (event) => {
+        observer.next(JSON.parse(event.data));
+      };
+      eventSource.onerror = (error) => {
+        observer.error(error);
+        eventSource.close();
+      };
+      return () => eventSource.close();
+    });
   }
 
   getProducts(skip: number = 0, limit: number = 100): Observable<ProductListResponse> {

@@ -707,3 +707,272 @@ textarea::placeholder {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+// Add these styles to your existing SCSS
+
+// Advanced Section
+.advanced-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(100, 255, 218, 0.2);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// File Upload Area
+.file-upload-area {
+  background: rgba(10, 25, 47, 0.5);
+  border: 2px dashed rgba(100, 255, 218, 0.3);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  
+  &:hover, &.dragging {
+    border-color: #64ffda;
+    background: rgba(100, 255, 218, 0.05);
+  }
+  
+  .upload-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  p {
+    color: #8892b0;
+    margin: 0.5rem 0;
+  }
+  
+  .browse-btn {
+    background: transparent;
+    border: 1px solid #64ffda;
+    color: #64ffda;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: rgba(100, 255, 218, 0.1);
+    }
+  }
+  
+  .supported-formats {
+    font-size: 0.75rem;
+    color: #5a6e8a;
+    margin-top: 0.75rem;
+  }
+}
+
+// File List
+.file-list {
+  margin-top: 1rem;
+  background: rgba(10, 25, 47, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem;
+  
+  .file-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(100, 255, 218, 0.2);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: #64ffda;
+    
+    .clear-files {
+      background: transparent;
+      border: none;
+      color: #ff6b6b;
+      cursor: pointer;
+      font-size: 0.75rem;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+  
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    
+    &:hover {
+      background: rgba(100, 255, 218, 0.05);
+    }
+    
+    .file-icon {
+      font-size: 1rem;
+    }
+    
+    .file-name {
+      flex: 1;
+      color: #ccd6f6;
+    }
+    
+    .file-size {
+      color: #5a6e8a;
+      font-size: 0.75rem;
+    }
+    
+    .remove-file {
+      background: transparent;
+      border: none;
+      color: #ff6b6b;
+      cursor: pointer;
+      font-size: 1rem;
+      opacity: 0.6;
+      
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+// URLs Input
+.urls-input {
+  margin-top: 1rem;
+  
+  .urls-header {
+    font-size: 0.875rem;
+    color: #64ffda;
+    margin-bottom: 0.5rem;
+  }
+  
+  .urls-field {
+    width: 100%;
+    background: rgba(10, 25, 47, 0.5);
+    border: 1px solid rgba(100, 255, 218, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem;
+    color: #ccd6f6;
+    font-size: 0.875rem;
+    
+    &:focus {
+      outline: none;
+      border-color: #64ffda;
+    }
+    
+    &::placeholder {
+      color: #5a6e8a;
+    }
+  }
+}
+
+// Input Stats
+.input-stats {
+  display: flex;
+  gap: 1rem;
+  
+  .gen-char-count, .file-count, .url-count {
+    font-size: 0.75rem;
+    color: #5a6e8a;
+  }
+}
+
+// Advanced Toggle Button
+.advanced-toggle {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  color: #64ffda;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(100, 255, 218, 0.1);
+  }
+}
+
+// JSON Syntax Highlighting
+.json-output {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  
+  .json-key {
+    color: #64ffda;
+  }
+  
+  .json-string {
+    color: #f1fa8c;
+  }
+  
+  .json-number {
+    color: #bd93f9;
+  }
+  
+  .json-boolean {
+    color: #ff79c6;
+  }
+  
+  .json-null {
+    color: #6272a4;
+  }
+}
+
+// PRD Content Styling
+.prd-content pre {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e6f1ff;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .file-upload-area {
+    padding: 1rem;
+    
+    .upload-icon {
+      font-size: 1.5rem;
+    }
+    
+    p {
+      font-size: 0.8rem;
+    }
+  }
+  
+  .file-item {
+    flex-wrap: wrap;
+    
+    .file-name {
+      width: 100%;
+      margin-left: 1.5rem;
+    }
+    
+    .file-size {
+      margin-left: 1.5rem;
+    }
+  }
+  
+  .input-stats {
+    flex-wrap: wrap;
+  }
+}

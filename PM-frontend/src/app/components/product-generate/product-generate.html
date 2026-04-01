@@ -5,19 +5,68 @@
       AI-Powered PRD Generator
     </div>
     <h1 class="gen-title">Turn ideas into<br/><span>complete products</span></h1>
-    <p class="gen-sub">Describe your product idea and our AI pipeline will generate strategy, market research, PRD, tech architecture, UX design, and QA strategy.</p>
+    <p class="gen-sub">Upload documents, add URLs, or describe your idea. Our AI pipeline generates strategy, market research, PRD, tech architecture, UX design, and QA strategy.</p>
   </div>
 
+  <!-- Main Input Area -->
   <div class="gen-input-wrap fade-up-d1">
     <div class="gen-input-header">
       <span>~/forge</span>
       <span>$</span>
       <span>describe_product.idea</span>
+      <button class="advanced-toggle" (click)="showAdvanced = !showAdvanced">
+        {{ showAdvanced ? '−' : '+' }} Advanced
+      </button>
     </div>
+    
+    <!-- Text Input -->
     <textarea [(ngModel)]="idea" placeholder="e.g. A SaaS platform for freelancers to manage clients, invoices, and projects in one place with AI-powered time tracking and financial insights..." rows="4"></textarea>
+    
+    <!-- Advanced: File Upload & URLs -->
+    <div class="advanced-section" *ngIf="showAdvanced">
+      <!-- File Upload Area -->
+      <div class="file-upload-area" 
+           [class.dragging]="isDragging"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave($event)"
+           (drop)="onDrop($event)">
+        <div class="upload-icon">📁</div>
+        <p>Drag & drop files here or</p>
+        <button class="browse-btn" (click)="fileInput.click()">Browse Files</button>
+        <input type="file" #fileInput multiple hidden (change)="onFileSelected($event)">
+        <p class="supported-formats">Supported: PDF, DOCX, XLSX, TXT, MD, MP3, WAV, MP4</p>
+      </div>
+      
+      <!-- File List -->
+      <div class="file-list" *ngIf="uploadedFiles.length > 0">
+        <div class="file-list-header">
+          <span>📎 Uploaded Files ({{ uploadedFiles.length }})</span>
+          <button class="clear-files" (click)="clearAllFiles()">Clear All</button>
+        </div>
+        <div class="file-item" *ngFor="let file of uploadedFiles; let i = index">
+          <span class="file-icon">📄</span>
+          <span class="file-name">{{ file.name }}</span>
+          <span class="file-size">{{ (file.size / 1024).toFixed(1) }} KB</span>
+          <button class="remove-file" (click)="removeFile(i)">✕</button>
+        </div>
+      </div>
+      
+      <!-- URLs Input -->
+      <div class="urls-input">
+        <div class="urls-header">
+          <span>🔗 URLs (comma separated)</span>
+        </div>
+        <input type="text" [(ngModel)]="urls" placeholder="https://docs.google.com/..., https://confluence.company.com/..., https://example.com/blog" class="urls-field">
+      </div>
+    </div>
+    
     <div class="gen-input-footer">
-      <span class="gen-char-count">{{ idea.length }} chars</span>
-      <button class="gen-submit" [class.loading]="isLoading" (click)="generateWithStreaming()" [disabled]="!idea.trim() || isLoading">
+      <div class="input-stats">
+        <span class="gen-char-count" *ngIf="idea.length > 0">{{ idea.length }} chars</span>
+        <span class="file-count" *ngIf="uploadedFiles.length > 0">📎 {{ uploadedFiles.length }} file(s)</span>
+        <span class="url-count" *ngIf="urls.length > 0">🔗 {{ urls.split(',').filter(u => u.trim()).length }} URL(s)</span>
+      </div>
+      <button class="gen-submit" [class.loading]="isLoading" (click)="generateWithStreaming()" [disabled]="(!idea.trim() && uploadedFiles.length === 0 && !urls.trim()) || isLoading">
         <div class="spin"></div>
         <span class="btn-txt">⚡ Generate Product</span>
       </button>
@@ -26,52 +75,40 @@
 
   <!-- Agent pipeline cards -->
   <div class="pipeline fade-up-d2">
-    <div class="agent-card" [class.running]="isAgentRunning('strategist')" [class.done]="isAgentDone('strategist')" [class.error]="hasAgentError('strategist')">
+    <div class="agent-card" [class.running]="isAgentRunning('strategist')" [class.done]="isAgentDone('strategist')">
       <div class="agent-icon">📊</div>
       <div class="agent-name">Strategist</div>
-      <div class="agent-status" [class.running]="isAgentRunning('strategist')" [class.done]="isAgentDone('strategist')">
-        {{ getAgentStatus('strategist') }}
-      </div>
+      <div class="agent-status">{{ getAgentStatus('strategist') }}</div>
       <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('strategist')"></div></div>
     </div>
     <div class="agent-card" [class.running]="isAgentRunning('market_research')" [class.done]="isAgentDone('market_research')">
       <div class="agent-icon">🔍</div>
       <div class="agent-name">Market Research</div>
-      <div class="agent-status" [class.running]="isAgentRunning('market_research')" [class.done]="isAgentDone('market_research')">
-        {{ getAgentStatus('market_research') }}
-      </div>
+      <div class="agent-status">{{ getAgentStatus('market_research') }}</div>
       <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('market_research')"></div></div>
     </div>
     <div class="agent-card" [class.running]="isAgentRunning('prd')" [class.done]="isAgentDone('prd')">
       <div class="agent-icon">📋</div>
       <div class="agent-name">PRD Writer</div>
-      <div class="agent-status" [class.running]="isAgentRunning('prd')" [class.done]="isAgentDone('prd')">
-        {{ getAgentStatus('prd') }}
-      </div>
+      <div class="agent-status">{{ getAgentStatus('prd') }}</div>
       <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('prd')"></div></div>
     </div>
     <div class="agent-card" [class.running]="isAgentRunning('tech_architecture')" [class.done]="isAgentDone('tech_architecture')">
       <div class="agent-icon">🏗️</div>
       <div class="agent-name">Tech Architecture</div>
-      <div class="agent-status" [class.running]="isAgentRunning('tech_architecture')" [class.done]="isAgentDone('tech_architecture')">
-        {{ getAgentStatus('tech_architecture') }}
-      </div>
+      <div class="agent-status">{{ getAgentStatus('tech_architecture') }}</div>
       <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('tech_architecture')"></div></div>
     </div>
     <div class="agent-card" [class.running]="isAgentRunning('ux_design')" [class.done]="isAgentDone('ux_design')">
       <div class="agent-icon">🎨</div>
       <div class="agent-name">UX Design</div>
-      <div class="agent-status" [class.running]="isAgentRunning('ux_design')" [class.done]="isAgentDone('ux_design')">
-        {{ getAgentStatus('ux_design') }}
-      </div>
+      <div class="agent-status">{{ getAgentStatus('ux_design') }}</div>
       <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('ux_design')"></div></div>
     </div>
     <div class="agent-card" [class.running]="isAgentRunning('qa_strategy')" [class.done]="isAgentDone('qa_strategy')">
       <div class="agent-icon">🧪</div>
       <div class="agent-name">QA Strategy</div>
-      <div class="agent-status" [class.running]="isAgentRunning('qa_strategy')" [class.done]="isAgentDone('qa_strategy')">
-        {{ getAgentStatus('qa_strategy') }}
-      </div>
+      <div class="agent-status">{{ getAgentStatus('qa_strategy') }}</div>
       <div class="agent-bar"><div class="agent-bar-fill" [style.width.%]="getAgentProgress('qa_strategy')"></div></div>
     </div>
   </div>
@@ -97,22 +134,22 @@
   </div>
 
   <!-- Live JSON Output Box -->
-<div class="live-output-box" *ngIf="showLiveOutput && currentAgentOutput">
-  <div class="live-output-header">
-    <div class="live-output-title">
-      <span class="live-icon">📡</span>
-      <span>Live JSON Output: {{ currentAgentName }}</span>
+  <div class="live-output-box" *ngIf="showLiveOutput && currentAgentOutput">
+    <div class="live-output-header">
+      <div class="live-output-title">
+        <span class="live-icon">📡</span>
+        <span>Live JSON Output: {{ currentAgentName }}</span>
+      </div>
+      <div class="live-badge">
+        <div class="pulse-dot"></div>
+        STREAMING
+      </div>
     </div>
-    <div class="live-badge">
-      <div class="pulse-dot"></div>
-      STREAMING
+    <div class="live-output-content" #liveOutputEl>
+      <pre class="json-output" [innerHTML]="currentAgentOutput"></pre>
+      <div class="cursor-blink" *ngIf="!prdComplete"></div>
     </div>
   </div>
-  <div class="live-output-content" #liveOutputEl>
-    <pre class="json-output" [innerHTML]="currentAgentOutput"></pre>
-    <div class="cursor-blink" *ngIf="!prdComplete"></div>
-  </div>
-</div>
 
   <!-- PRD streaming output -->
   <div class="prd-stream" [class.visible]="prdContent">
@@ -126,7 +163,7 @@
       </div>
     </div>
     <div class="prd-content" #prdContentEl>
-      {{ prdContent }}
+      <pre>{{ prdContent }}</pre>
     </div>
   </div>
 

@@ -14,6 +14,14 @@ interface AgentState {
   output?: any;
 }
 
+interface UploadedFile {
+  name: string;
+  size: number;
+  type: string;
+  file: File;
+  status: 'pending' | 'uploading' | 'done' | 'error';
+}
+
 @Component({
   selector: 'app-product-generate',
   imports: [RouterModule, CommonModule, FormsModule],
@@ -25,6 +33,14 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
   isLoading: boolean = false;
   error: string | null = null;
   productId: string | null = null;
+  
+  // Multi-format inputs
+  uploadedFiles: UploadedFile[] = [];
+  urls: string = '';
+  showAdvanced: boolean = false;
+  
+  // Drag and drop
+  isDragging: boolean = false;
   
   // Agent states
   agentStates: { [key: string]: AgentState } = {
@@ -50,7 +66,6 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
   private typewriterInterval: any;
   private currentChunkIndex: number = 0;
   private outputChunks: string[] = [];
-  private currentProcessingAgent: string = '';
   
   private generateSubscription: Subscription | null = null;
   private logStartTime: number = 0;
@@ -58,11 +73,19 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
   @ViewChild('terminalBody') terminalBody!: ElementRef;
   @ViewChild('prdContentEl') prdContentEl!: ElementRef;
   @ViewChild('liveOutputEl') liveOutputEl!: ElementRef;
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('dropZone') dropZone!: ElementRef;
   
   get currentTime(): string {
     if (!this.logStartTime) return '00:00:00';
     const elapsed = (Date.now() - this.logStartTime) / 1000;
     return elapsed.toFixed(1).padStart(6, '0') + 's';
+  }
+  
+  get totalFileSize(): string {
+    const total = this.uploadedFiles.reduce((sum, f) => sum + f.size, 0);
+    if (total < 1024 * 1024) return `${(total / 1024).toFixed(1)} KB`;
+    return `${(total / (1024 * 1024)).toFixed(1)} MB`;
   }
   
   constructor(
@@ -75,7 +98,7 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
     if (this.terminalBody) {
       this.terminalBody.nativeElement.scrollTop = this.terminalBody.nativeElement.scrollHeight;
     }
-    if (this.prdContentEl && this.prdComplete === false) {
+    if (this.prdContentEl && !this.prdComplete) {
       this.prdContentEl.nativeElement.scrollTop = this.prdContentEl.nativeElement.scrollHeight;
     }
     if (this.liveOutputEl && this.showLiveOutput) {
@@ -90,10 +113,95 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
     }
   }
   
-  generateWithStreaming(): void {
-    if (!this.idea.trim() || this.isLoading) return;
+  // ==================== FILE HANDLING ====================
+  
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+      this.addFiles(Array.from(input.files));
+    }
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
+  }
+  
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+  
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+  
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
     
-    console.log('🚀 Starting generation for:', this.idea);
+    const files = event.dataTransfer?.files;
+    if (files) {
+      this.addFiles(Array.from(files));
+    }
+  }
+  
+  private addFiles(files: File[]): void {
+    const validTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain',
+      'text/markdown',
+      'audio/mpeg',
+      'audio/wav',
+      'video/mp4'
+    ];
+    
+    for (const file of files) {
+      if (validTypes.includes(file.type) || file.name.endsWith('.md') || file.name.endsWith('.txt')) {
+        this.uploadedFiles.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          file: file,
+          status: 'pending'
+        });
+        this.addLog('info', `📎 Added file: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+      } else {
+        this.addLog('warn', `⚠️ Skipped unsupported file: ${file.name}`);
+      }
+    }
+    this.cdr.detectChanges();
+  }
+  
+  removeFile(index: number): void {
+    const removed = this.uploadedFiles.splice(index, 1)[0];
+    this.addLog('info', `🗑️ Removed file: ${removed.name}`);
+    this.cdr.detectChanges();
+  }
+  
+  clearAllFiles(): void {
+    this.uploadedFiles = [];
+    this.addLog('info', '🗑️ Cleared all files');
+    this.cdr.detectChanges();
+  }
+  
+  // ==================== GENERATION ====================
+  
+  generateWithStreaming(): void {
+    if ((!this.idea.trim() && this.uploadedFiles.length === 0 && !this.urls.trim()) || this.isLoading) {
+      this.addLog('warn', '⚠️ Please enter an idea, upload files, or add URLs');
+      return;
+    }
+    
+    console.log('🚀 Starting generation with:', {
+      idea: this.idea,
+      files: this.uploadedFiles.length,
+      urls: this.urls
+    });
     
     this.isLoading = true;
     this.error = null;
@@ -107,34 +215,53 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
     this.currentAgentName = '';
     this.outputChunks = [];
     this.currentChunkIndex = 0;
-    this.currentProcessingAgent = '';
     
     // Reset agent states
     Object.keys(this.agentStates).forEach(key => {
       this.agentStates[key] = { status: 'idle', progress: 0, output: null };
     });
     
-    this.addLog('info', `Starting generation pipeline for: "${this.idea.substring(0, 60)}..."`);
+    this.addLog('info', `🚀 Starting generation pipeline...`);
     
-    const request = { idea: this.idea.trim() };
+    if (this.idea.trim()) {
+      this.addLog('info', `📝 Idea: "${this.idea.substring(0, 80)}..."`);
+    }
+    if (this.uploadedFiles.length > 0) {
+      this.addLog('info', `📎 Files: ${this.uploadedFiles.length} file(s) (${this.totalFileSize})`);
+    }
+    if (this.urls.trim()) {
+      const urlList = this.urls.split(',').map(u => u.trim()).filter(u => u);
+      this.addLog('info', `🔗 URLs: ${urlList.length} URL(s)`);
+    }
     
-    // Call the generate API
-    this.generateSubscription = this.productService.generateProduct(request).subscribe({
+    // Prepare form data for multi-format upload
+    const formData = new FormData();
+    
+    if (this.idea.trim()) {
+      formData.append('idea', this.idea.trim());
+    }
+    
+    for (const fileItem of this.uploadedFiles) {
+      formData.append('files', fileItem.file);
+    }
+    
+    if (this.urls.trim()) {
+      formData.append('urls', this.urls);
+    }
+    
+    // Use the multi-format endpoint
+    this.generateSubscription = this.productService.generateProductFromFiles(formData).subscribe({
       next: (response: any) => {
         console.log('📦 API Response received:', response);
         
-        if (response.success && response.data) {
+        if (response.success && response.outputs) {
           this.productId = response.product_id;
-          this.addLog('success', `Product created with ID: ${this.productId}`);
+          this.addLog('success', `✅ Product created with ID: ${this.productId}`);
+          this.addLog('info', `📊 Processed ${response.input_summary?.sources_processed || 0} source(s)`);
+          this.addLog('info', `💡 Consolidated idea: "${response.input_summary?.consolidated_idea?.substring(0, 80)}..."`);
           
-          // Check if data has outputs
-          console.log('📊 Data keys:', Object.keys(response.data));
-          console.log('📊 Strategist:', response.data.strategist ? '✅ Has output' : '❌ No output');
-          console.log('📊 Market Research:', response.data.market_research ? '✅ Has output' : '❌ No output');
-          console.log('📊 PRD:', response.data.prd ? '✅ Has output' : '❌ No output');
-          
-          // Start processing agents
-          this.processAllAgents(response.data);
+          // Process all agents
+          this.processAllAgents(response.outputs);
           
         } else {
           console.error('❌ Response success false:', response);
@@ -169,9 +296,9 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
     const processNextAgent = () => {
       if (currentIndex >= agents.length) {
         console.log('✅ All agents processed!');
-        this.addLog('success', 'All agents completed successfully!');
+        this.addLog('success', '✨ All agents completed successfully!');
         this.prdComplete = true;
-        this.addLog('success', 'Generation complete!');
+        this.addLog('success', '🎉 Generation complete! Your product documentation is ready.');
         this.isLoading = false;
         this.showLiveOutput = false;
         this.cdr.detectChanges();
@@ -184,9 +311,7 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
       console.log(`🔄 Processing agent ${currentIndex + 1}/${agents.length}: ${agent.key}`, agentOutput ? '✅ Has output' : '❌ No output');
       
       if (agentOutput) {
-        // Update UI in Angular zone
         this.ngZone.run(() => {
-          // Start agent - show running state
           this.agentStates[agent.key] = { 
             ...this.agentStates[agent.key], 
             status: 'running', 
@@ -194,21 +319,16 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
             output: null
           };
           
-          // Show live output box
           this.showLiveOutput = true;
           this.currentAgentName = agent.name;
           this.currentAgentOutput = '';
           
-          this.addLog('info', `Processing ${agent.name}...`);
+          this.addLog('info', `🤖 Processing ${agent.name}...`);
           this.cdr.detectChanges();
-          
-          console.log(`🎬 Agent ${agent.name} started - UI updated`);
         });
         
-        // Small delay to show running state
         setTimeout(() => {
           this.ngZone.run(() => {
-            // Store output
             this.agentStates[agent.key] = { 
               ...this.agentStates[agent.key], 
               status: 'done', 
@@ -216,21 +336,23 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
               output: agentOutput
             };
             
+            // Check if this is the final PRD output
+            if (agent.key === 'prd' && agentOutput.final_prd) {
+              this.streamPRDContent(agentOutput.final_prd);
+            }
+            
             this.cdr.detectChanges();
-            console.log(`✅ Agent ${agent.name} completed - UI updated`);
           });
           
-          // Stream the output
           this.streamJSONOutput(agentOutput, agent.name, () => {
             this.ngZone.run(() => {
-              this.addLog('success', `${agent.name} complete`);
+              this.addLog('success', `✓ ${agent.name} complete`);
               currentIndex++;
               this.cdr.detectChanges();
               
-              // Process next agent after a delay
               setTimeout(() => {
                 processNextAgent();
-              }, 500);
+              }, 300);
             });
           });
         }, 500);
@@ -245,11 +367,8 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
   }
   
   private streamJSONOutput(output: any, agentName: string, onComplete: () => void): void {
-    console.log(`📡 Streaming output for ${agentName}...`);
-    
-    // Format JSON with syntax highlighting
     const formattedJSON = this.formatJSONWithSyntax(output);
-    this.outputChunks = this.splitIntoChunks(formattedJSON, 2);
+    this.outputChunks = this.splitIntoChunks(formattedJSON, 3);
     this.currentChunkIndex = 0;
     
     this.ngZone.run(() => {
@@ -263,7 +382,6 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
       clearInterval(this.typewriterInterval);
     }
     
-    // Start typewriter effect
     this.typewriterInterval = setInterval(() => {
       if (this.currentChunkIndex < this.outputChunks.length) {
         this.ngZone.run(() => {
@@ -271,7 +389,6 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
           this.currentChunkIndex++;
           this.cdr.detectChanges();
           
-          // Auto-scroll live output
           if (this.liveOutputEl) {
             setTimeout(() => {
               this.liveOutputEl.nativeElement.scrollTop = this.liveOutputEl.nativeElement.scrollHeight;
@@ -281,10 +398,42 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
       } else {
         clearInterval(this.typewriterInterval);
         this.typewriterInterval = null;
-        console.log(`✅ Streaming complete for ${agentName}`);
         onComplete();
       }
-    }, 15);
+    }, 12);
+  }
+  
+  private streamPRDContent(content: string): void {
+    this.ngZone.run(() => {
+      this.prdContent = '';
+      this.prdComplete = false;
+      this.cdr.detectChanges();
+    });
+    
+    const chunks = this.splitIntoChunks(content, 2);
+    let index = 0;
+    
+    const streamInterval = setInterval(() => {
+      if (index < chunks.length) {
+        this.ngZone.run(() => {
+          this.prdContent += chunks[index];
+          index++;
+          this.cdr.detectChanges();
+          
+          if (this.prdContentEl) {
+            setTimeout(() => {
+              this.prdContentEl.nativeElement.scrollTop = this.prdContentEl.nativeElement.scrollHeight;
+            }, 5);
+          }
+        });
+      } else {
+        clearInterval(streamInterval);
+        this.ngZone.run(() => {
+          this.prdComplete = true;
+          this.cdr.detectChanges();
+        });
+      }
+    }, 10);
   }
   
   private splitIntoChunks(text: string, chunkSize: number): string[] {
@@ -325,7 +474,6 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
       type: type,
       text: text
     });
-    console.log(`[${type}] ${text}`);
     this.cdr.detectChanges();
   }
   
@@ -366,6 +514,6 @@ export class ProductGenerateComponent implements AfterViewChecked, OnDestroy {
       this.typewriterInterval = null;
     }
     this.isLoading = false;
-    this.addLog('warn', 'Generation cancelled by user');
+    this.addLog('warn', '⏹️ Generation cancelled by user');
   }
 }
