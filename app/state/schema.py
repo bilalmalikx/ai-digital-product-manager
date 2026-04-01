@@ -52,6 +52,9 @@ class AgentState(TypedDict):
     tech_architecture: Optional[Dict[str, Any]]
     ux_design: Optional[Dict[str, Any]]
     qa_strategy: Optional[Dict[str, Any]]
+
+    final_prd: Optional[str]
+    functions_list: Optional[List[Dict]]
     
     # Metadata
     current_agent: Optional[str]
