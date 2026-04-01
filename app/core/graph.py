@@ -1,68 +1,52 @@
-"""LangGraph workflow for product generation"""
-
 from langgraph.graph import StateGraph, END
 from app.state.schema import AgentState
 from app.agents.strategist import create_strategist_node
-from app.agents.market_research import create_market_research_node
+from app.agents.market_researcher import create_market_researcher_node
 from app.agents.prd_writer import create_prd_writer_node
-from app.agents.tech_architecture import create_tech_architecture_node
-from app.agents.ux_design import create_ux_design_node
-from app.agents.qa_strategy import create_qa_strategy_node
-from app.agents.final_prd_writer import create_final_prd_writer_node  # ✅ ADDED
+from app.agents.tech_architect import create_tech_architect_node
+from app.agents.ux_designer import create_ux_designer_node
+from app.agents.qa_engineer import create_qa_engineer_node
+from app.agents.final_prd_writer import create_final_prd_writer_node
 import logging
 
 logger = logging.getLogger(__name__)
 
-
-def build_graph() -> StateGraph:
-    """
-    Build the complete LangGraph workflow for product generation.
+def build_graph():
+    """Build the agent workflow graph."""
     
-    Flow:
-    Start → Strategist → Market Research → PRD Writer → 
-    Tech Architecture → UX Design → QA Strategy → 
-    FINAL PRD WRITER → End
-    """
+    # Create nodes
+    strategist_node = create_strategist_node()
+    market_researcher_node = create_market_researcher_node()
+    prd_writer_node = create_prd_writer_node()
+    tech_architect_node = create_tech_architect_node()
+    ux_designer_node = create_ux_designer_node()
+    qa_engineer_node = create_qa_engineer_node()
+    final_prd_writer_node = create_final_prd_writer_node()
     
-    # Create graph
+    # Build workflow
     workflow = StateGraph(AgentState)
     
-    # Create all nodes
-    strategist_node = create_strategist_node()
-    market_research_node = create_market_research_node()
-    prd_writer_node = create_prd_writer_node()
-    tech_architecture_node = create_tech_architecture_node()
-    ux_design_node = create_ux_design_node()
-    qa_strategy_node = create_qa_strategy_node()
-    final_prd_writer_node = create_final_prd_writer_node()  # ✅ NEW NODE
+    # Add nodes
+    workflow.add_node("strategist", strategist_node)
+    workflow.add_node("market_researcher", market_researcher_node)
+    workflow.add_node("prd_writer", prd_writer_node)
+    workflow.add_node("tech_architect", tech_architect_node)
+    workflow.add_node("ux_designer", ux_designer_node)
+    workflow.add_node("qa_engineer", qa_engineer_node)
+    workflow.add_node("final_prd_writer", final_prd_writer_node)
     
-    # Add nodes to graph
-    workflow.add_node("strategist_node", strategist_node)
-    workflow.add_node("market_research_node", market_research_node)
-    workflow.add_node("prd_writer_node", prd_writer_node)
-    workflow.add_node("tech_architecture_node", tech_architecture_node)
-    workflow.add_node("ux_design_node", ux_design_node)
-    workflow.add_node("qa_strategy_node", qa_strategy_node)
-    workflow.add_node("final_prd_writer_node", final_prd_writer_node)  # ✅ NEW NODE
+    # Set entry point
+    workflow.set_entry_point("strategist")
     
-    # Define edges (flow)
-    workflow.set_entry_point("strategist_node")
+    # Add edges (sequential workflow)
+    workflow.add_edge("strategist", "market_researcher")
+    workflow.add_edge("market_researcher", "prd_writer")
+    workflow.add_edge("prd_writer", "tech_architect")
+    workflow.add_edge("tech_architect", "ux_designer")
+    workflow.add_edge("ux_designer", "qa_engineer")
+    workflow.add_edge("qa_engineer", "final_prd_writer")
+    workflow.add_edge("final_prd_writer", END)
     
-    workflow.add_edge("strategist_node", "market_research_node")
-    workflow.add_edge("market_research_node", "prd_writer_node")
-    workflow.add_edge("prd_writer_node", "tech_architecture_node")
-    workflow.add_edge("tech_architecture_node", "ux_design_node")
-    workflow.add_edge("ux_design_node", "qa_strategy_node")
-    workflow.add_edge("qa_strategy_node", "final_prd_writer_node")  # ✅ GOES TO FINAL PRD
-    workflow.add_edge("final_prd_writer_node", END)  # ✅ THEN END
-    
-    logger.info("Graph built successfully with Final PRD Writer node")
+    logger.info("Graph built successfully with 7 agents")
     
     return workflow.compile()
-
-
-# For debugging
-if __name__ == "__main__":
-    graph = build_graph()
-    print("Graph structure:")
-    print(graph.get_graph().draw_ascii())

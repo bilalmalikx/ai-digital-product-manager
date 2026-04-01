@@ -15,3 +15,15 @@ aiohttp
 httpx
 redis
 celery
+PyPDF2
+python-docx
+openpyxl
+pandas
+markdown
+beautifulsoup4
+
+# Audio/Video processing
+SpeechRecognition
+pydub
+moviepy
+aiohttp
