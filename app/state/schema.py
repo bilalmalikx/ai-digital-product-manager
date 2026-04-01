@@ -60,3 +60,24 @@ class AgentState(TypedDict):
     current_agent: Optional[str]
     errors: Optional[List[str]]
     timestamp: Optional[str]
+
+# Add these to your existing schemas
+
+class MultiFormatInputRequest(BaseModel):
+    """Multi-format input request"""
+    idea: Optional[str] = None
+    file_paths: Optional[List[str]] = None  # Local file paths
+    urls: Optional[List[str]] = None
+    audio_paths: Optional[List[str]] = None
+    video_paths: Optional[List[str]] = None
+
+class ProcessedInputResponse(BaseModel):
+    """Response after processing multiple inputs"""
+    success: bool
+    consolidated_idea: str
+    requirements: List[str]
+    constraints: List[str]
+    stakeholders: List[str]
+    open_questions: List[str]
+    sources_processed: int
+    errors: Optional[List[str]] = None
