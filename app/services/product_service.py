@@ -43,6 +43,7 @@ class ProductService:
                 "tech_architecture": None,
                 "ux_design": None,
                 "qa_strategy": None,
+                "final_prd": None,
                 "current_agent": "start",
                 "errors": [],
                 "timestamp": datetime.utcnow().isoformat()
@@ -58,6 +59,7 @@ class ProductService:
             product.tech_architecture = final_state.get("tech_architecture")
             product.ux_design = final_state.get("ux_design")
             product.qa_strategy = final_state.get("qa_strategy")
+            product.final_prd = final_state.get("final_prd")
             product.status = ProductStatus.IN_REVIEW
             
             # Generate final PRD document using MCP
@@ -70,7 +72,8 @@ class ProductService:
                     "prd": product.prd_output,
                     "tech_architecture": product.tech_architecture,
                     "ux_design": product.ux_design,
-                    "qa_strategy": product.qa_strategy
+                    "qa_strategy": product.qa_strategy,
+                    "final_prd": product.final_prd
                 }
             })
             
@@ -134,6 +137,7 @@ class ProductService:
                 "tech_architecture": None,
                 "ux_design": None,
                 "qa_strategy": None,
+                "final_prd": None,
                 "current_agent": "start",
                 "errors": [],
                 "timestamp": datetime.utcnow().isoformat()
@@ -146,7 +150,8 @@ class ProductService:
                 ("prd_node", "prd_output", "📋 Generating PRD..."),
                 ("tech_architecture_node", "tech_architecture", "🏗️ Designing tech architecture..."),
                 ("ux_design_node", "ux_design", "🎨 Creating UX design..."),
-                ("qa_strategy_node", "qa_strategy", "🧪 Developing QA strategy...")
+                ("qa_strategy_node", "qa_strategy", "🧪 Developing QA strategy..."),
+                ("final_prd_writer_node", "final_prd", "📝 Generating final PRD...")
             ]
             
             current_state = initial_state
@@ -192,6 +197,8 @@ class ProductService:
                     product.ux_design = mock_output
                 elif agent_name == "qa_strategy_node":
                     product.qa_strategy = mock_output
+                elif agent_name == "final_prd_writer_node":
+                    product.final_prd = mock_output
                 
                 self.db.commit()
                 
