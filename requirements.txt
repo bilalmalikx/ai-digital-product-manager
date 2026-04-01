@@ -21,9 +21,8 @@ openpyxl
 pandas
 markdown
 beautifulsoup4
-
-# Audio/Video processing
 SpeechRecognition
 pydub
-moviepy
+moviepy==1.0.3
 aiohttp
+ffmpeg
