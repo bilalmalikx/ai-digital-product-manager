@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from app.models.product import Product, ProductStatus
 from app.models.session import Session as SessionModel
 from app.core.graph import build_graph
+from app.agents.final_prd_writer import create_final_prd_writer_node
 from app.tools.database_tools import DatabaseTools
-from app.tools.mcp_tools import mcp_tools
 import json
 import logging
 import asyncio
@@ -23,7 +23,7 @@ class ProductService:
         self.graph = build_graph()
     
     async def generate_product(self, idea: str, product_id: Optional[str] = None) -> Dict[str, Any]:
-        """Generate complete product documentation."""
+        """Generate complete product documentation with all agents including Final PRD Writer."""
         
         try:
             # Save initial product
@@ -49,7 +49,7 @@ class ProductService:
                 "timestamp": datetime.utcnow().isoformat()
             }
             
-            # Run the graph
+            # Run the graph with all agents including Final PRD Writer
             final_state = await self.graph.ainvoke(initial_state)
             
             # Update product with all outputs
@@ -59,26 +59,20 @@ class ProductService:
             product.tech_architecture = final_state.get("tech_architecture")
             product.ux_design = final_state.get("ux_design")
             product.qa_strategy = final_state.get("qa_strategy")
-            product.final_prd = final_state.get("final_prd")
+            
+            # Extract final PRD (from FinalPRDWriterAgent)
+            final_prd_data = final_state.get("final_prd")
+            if final_prd_data:
+                if isinstance(final_prd_data, dict):
+                    # If it's a JSON dict, convert to formatted string
+                    product.final_prd = json.dumps(final_prd_data, indent=2)
+                else:
+                    product.final_prd = str(final_prd_data)
+            else:
+                # Fallback: generate basic PRD
+                product.final_prd = self._generate_basic_prd(product)
+            
             product.status = ProductStatus.IN_REVIEW
-            
-            # Generate final PRD document using MCP
-            final_prd = await mcp_tools.generate_prd_document({
-                "product": {
-                    "name": product.name,
-                    "idea": product.idea,
-                    "strategist": product.strategist_output,
-                    "market_research": product.market_research_output,
-                    "prd": product.prd_output,
-                    "tech_architecture": product.tech_architecture,
-                    "ux_design": product.ux_design,
-                    "qa_strategy": product.qa_strategy,
-                    "final_prd": product.final_prd
-                }
-            })
-            
-            if final_prd:
-                product.final_prd = final_prd
             
             # Save session
             self.db_tools.save_session_state(
@@ -109,6 +103,36 @@ class ProductService:
             logger.error(f"Product generation failed: {e}")
             self.db.rollback()
             raise
+    
+    def _generate_basic_prd(self, product: Product) -> str:
+        """Fallback PRD generation if agent fails."""
+        return f"""
+# Product Requirements Document
+
+## Product Name: {product.name}
+
+## Original Idea: {product.idea}
+
+## Executive Summary
+This document outlines the product requirements for {product.name}.
+
+## Features
+Based on the initial idea, the product will include:
+- Core functionality as described in the idea
+- User management and authentication
+- Data persistence and storage
+- API integration capabilities
+
+## Technical Considerations
+- Scalable architecture
+- Security best practices
+- Performance optimization
+
+## Timeline
+To be determined based on detailed requirements.
+
+*Note: This is an automatically generated PRD. For detailed specifications, please run the complete agent workflow.*
+"""
     
     async def generate_product_stream(self, idea: str, product_id: Optional[str] = None):
         """Generate product with streaming updates - word by word"""
@@ -143,7 +167,7 @@ class ProductService:
                 "timestamp": datetime.utcnow().isoformat()
             }
             
-            # Define agents in order
+            # Define agents in order - INCLUDING FINAL PRD WRITER
             agents = [
                 ("strategist_node", "strategist_output", "📊 Strategist analyzing market..."),
                 ("market_research_node", "market_research_output", "🔍 Conducting market research..."),
@@ -151,7 +175,7 @@ class ProductService:
                 ("tech_architecture_node", "tech_architecture", "🏗️ Designing tech architecture..."),
                 ("ux_design_node", "ux_design", "🎨 Creating UX design..."),
                 ("qa_strategy_node", "qa_strategy", "🧪 Developing QA strategy..."),
-                ("final_prd_writer_node", "final_prd", "📝 Generating final PRD...")
+                ("final_prd_writer_node", "final_prd", "📝 Generating final comprehensive PRD...")
             ]
             
             current_state = initial_state
@@ -165,20 +189,94 @@ class ProductService:
                     "message": message
                 }
                 
-                # Simulate agent work
                 await asyncio.sleep(1.5)
                 
-                # Mock output
-                mock_output = {
-                    "status": "completed",
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "analysis": f"Detailed analysis from {agent_name}",
-                    "recommendations": [
-                        "Recommendation 1",
-                        "Recommendation 2",
-                        "Recommendation 3"
-                    ]
-                }
+                # Mock output with real structure
+                if agent_name == "strategist_node":
+                    mock_output = {
+                        "market_positioning": "Premium AI-powered solution targeting enterprise customers",
+                        "target_users": ["CTOs", "Product Managers", "Software Architects"],
+                        "strategy": "Differentiate through AI automation and seamless integration",
+                        "competitive_advantage": "Native AI integration with existing workflows"
+                    }
+                elif agent_name == "market_research_node":
+                    mock_output = {
+                        "competitors": [{"name": "Competitor A", "strength": "Market share", "weakness": "High cost"}],
+                        "market_size": "$5B and growing at 25% CAGR",
+                        "trends": ["AI adoption", "Automation", "Low-code platforms"],
+                        "opportunities": ["Untapped SMB segment", "Integration gap"],
+                        "threats": ["New entrants", "Price pressure"]
+                    }
+                elif agent_name == "prd_node":
+                    mock_output = {
+                        "features": [
+                            {"name": "User Auth", "priority": "P0", "description": "Secure authentication"},
+                            {"name": "Agent Workflow", "priority": "P0", "description": "Multi-agent orchestration"},
+                            {"name": "Analytics", "priority": "P1", "description": "Usage metrics"}
+                        ],
+                        "requirements": ["Scalable architecture", "99.9% uptime"],
+                        "user_stories": ["As a user, I want to generate PRDs automatically"],
+                        "success_metrics": ["50% reduction in documentation time"]
+                    }
+                elif agent_name == "tech_architecture_node":
+                    mock_output = {
+                        "tech_stack": {
+                            "backend": ["FastAPI", "PostgreSQL", "Redis"],
+                            "frontend": ["Angular", "Tailwind"],
+                            "infrastructure": ["Docker", "AWS"]
+                        },
+                        "system_design": "Microservices architecture with event-driven communication",
+                        "api_endpoints": ["/api/v1/generate", "/api/v1/products"],
+                        "database_schema": [{"table": "products", "columns": ["id", "idea", "final_prd"]}],
+                        "security_considerations": ["JWT auth", "Rate limiting", "Data encryption"]
+                    }
+                elif agent_name == "ux_design_node":
+                    mock_output = {
+                        "user_flows": [{"flow_name": "PRD Generation", "steps": ["Input idea", "Review outputs", "Export PRD"]}],
+                        "key_screens": ["Dashboard", "Generator", "History"],
+                        "design_system": {"colors": ["primary-blue", "secondary-gray"]},
+                        "accessibility": ["WCAG 2.1 AA compliant"]
+                    }
+                elif agent_name == "qa_strategy_node":
+                    mock_output = {
+                        "test_cases": [{"name": "PRD Generation", "steps": ["Enter idea", "Verify output format"]}],
+                        "testing_approach": "Automated testing with 80% coverage",
+                        "automation_strategy": "CI/CD pipeline with GitHub Actions",
+                        "performance_benchmarks": ["< 2s response time", "100 concurrent users"]
+                    }
+                elif agent_name == "final_prd_writer_node":
+                    mock_output = {
+                        "product_name": product.name,
+                        "executive_summary": {
+                            "vision": "AI-powered product documentation automation",
+                            "problem_statement": "Product managers spend 40% time on documentation",
+                            "target_users": ["Product Managers", "CTOs", "Technical Writers"]
+                        },
+                        "features": [
+                            {"id": "F1", "name": "Auto PRD Generation", "priority": "P0", "effort": "High"},
+                            {"id": "F2", "name": "Multi-agent Workflow", "priority": "P0", "effort": "Medium"},
+                            {"id": "F3", "name": "Export Options", "priority": "P1", "effort": "Low"}
+                        ],
+                        "technical_specifications": {
+                            "backend_apis": [{"endpoint": "/api/v1/generate", "method": "POST"}],
+                            "tech_stack": {"backend": ["FastAPI"], "frontend": ["Angular"]}
+                        },
+                        "timeline": {
+                            "phase_1_mvp": {"duration": "4 weeks", "features": ["F1"]},
+                            "phase_2": {"duration": "6 weeks", "features": ["F2", "F3"]}
+                        },
+                        "success_metrics": [
+                            {"metric": "Time saved", "target": "50% reduction"},
+                            {"metric": "User adoption", "target": "1000 users in Q1"}
+                        ]
+                    }
+                else:
+                    mock_output = {
+                        "status": "completed",
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "analysis": f"Detailed analysis from {agent_name}",
+                        "recommendations": ["Recommendation 1", "Recommendation 2", "Recommendation 3"]
+                    }
                 
                 # Update state and product
                 current_state[output_key] = mock_output
@@ -198,7 +296,7 @@ class ProductService:
                 elif agent_name == "qa_strategy_node":
                     product.qa_strategy = mock_output
                 elif agent_name == "final_prd_writer_node":
-                    product.final_prd = mock_output
+                    product.final_prd = json.dumps(mock_output, indent=2)
                 
                 self.db.commit()
                 
@@ -215,70 +313,6 @@ class ProductService:
                     "type": "outputs_update",
                     "outputs": all_outputs.copy()
                 }
-            
-            # Generate final PRD
-            yield {
-                "type": "generating_final",
-                "message": "📝 Generating final PRD document..."
-            }
-            
-            prd_content = f"""
-# Product Requirements Document
-
-## Product Name: {product.name}
-
-## Idea: {product.idea}
-
-## Executive Summary
-This comprehensive PRD outlines the complete product specifications for {product.name}, an innovative solution built with modern technologies.
-
-## Market Analysis
-Based on our market research, this product addresses key gaps in the current market landscape.
-
-## Technical Architecture
-The system will be built using:
-- **Frontend**: Angular 17+ with standalone components
-- **Backend**: FastAPI with async support
-- **Database**: PostgreSQL with Redis caching
-- **Deployment**: Docker containers on Kubernetes
-
-## Features
-1. **User Authentication**: Secure JWT-based authentication
-2. **Real-time Updates**: WebSocket connections for live data
-3. **Scalable Architecture**: Horizontal scaling support
-4. **Analytics Dashboard**: Comprehensive metrics and insights
-
-## Timeline
-- **Phase 1 (2 weeks)**: Core setup and authentication
-- **Phase 2 (3 weeks)**: Main features implementation
-- **Phase 3 (2 weeks)**: Testing and deployment
-
-## Success Metrics
-- User adoption rate > 70%
-- Response time < 200ms
-- 99.9% uptime
-"""
-            
-            # Stream word by word
-            words = prd_content.split()
-            for i, word in enumerate(words):
-                chunk = word + (" " if i < len(words) - 1 else "")
-                yield {
-                    "type": "prd_chunk",
-                    "chunk": chunk,
-                    "message": f"📝 {chunk[:50]}..." if i % 10 == 0 else None
-                }
-                await asyncio.sleep(0.03)
-            
-            # Save final PRD
-            product.final_prd = prd_content
-            product.status = ProductStatus.IN_REVIEW
-            self.db.commit()
-            
-            yield {
-                "type": "prd_complete",
-                "message": "✅ Final PRD generated successfully!"
-            }
             
             # Final complete event
             yield {
