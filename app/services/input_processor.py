@@ -19,6 +19,7 @@ from bs4 import BeautifulSoup
 import speech_recognition as sr
 from pydub import AudioSegment
 import moviepy.editor as mp
+from app.core.llm import get_llm, invoke_llm_with_tracing
 
 # LLM for summarization
 from langchain_openai import ChatOpenAI
@@ -37,7 +38,7 @@ class InputProcessor:
     """
     
     def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
+        self.llm = get_llm()
     
     async def process_inputs(self, inputs: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
