@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.product_service import ProductService
 from app.services.input_processor import InputProcessor
+from app.guardrails.input_guardrail import validate_product_idea
+from app.guardrails.output_guardrail import filter_agent_output
 from app.schemas.product import (
     ProductCreate, 
     ProductResponse, 
@@ -33,24 +35,25 @@ async def generate_product(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
-    """Generate complete product documentation from idea."""
-    
     try:
+        validate_product_idea(request.idea)
+
         service = ProductService(db)
-        
-        # Run generation
+
         result = await service.generate_product(
             idea=request.idea,
             product_id=request.product_id
         )
-        
+
+        clean_output = filter_agent_output(result.get("outputs", {}))
+
         return ProductGenerateResponse(
             success=True,
             product_id=UUID(result["product_id"]) if result.get("product_id") else None,
             message="Product generated successfully",
-            data=result.get("outputs")
+            data=clean_output
         )
-        
+
     except Exception as e:
         logger.error(f"Product generation error: {e}")
         return ProductGenerateResponse(
@@ -154,7 +157,8 @@ async def generate_product_stream(
             idea=request.idea,
             product_id=request.product_id
         ):
-            yield f"data: {json.dumps(event)}\n\n"
+            clean_event = filter_agent_output(event)
+            yield f"data: {json.dumps(clean_event)}\n\n"
     
     return StreamingResponse(
         event_generator(),

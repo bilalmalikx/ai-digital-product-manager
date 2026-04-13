@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import products
 from app.core.config import settings
+from app.middleware.security import SimpleRateLimitMiddleware
 import logging
 
 # Configure logging
@@ -21,6 +22,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
+    SimpleRateLimitMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
