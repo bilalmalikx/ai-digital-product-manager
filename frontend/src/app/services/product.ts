@@ -8,7 +8,7 @@ import { Product, ProductGenerateRequest, ProductResponse, ProductListResponse }
   providedIn: 'root'
 })
 export class ProductService {
-  private apiUrl = 'http://localhost:8000/products';
+  private apiUrl = 'http://127.0.0.1:8000/products';
 
   constructor(private http: HttpClient) {}
 

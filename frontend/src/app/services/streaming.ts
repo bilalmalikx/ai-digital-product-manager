@@ -10,7 +10,7 @@ export class StreamingService {
   
   connectStream(idea: string): Subject<StreamEvent> {
     const eventSubject = new Subject<StreamEvent>();
-    const url = `http://localhost:8000/products/generate-stream?idea=${encodeURIComponent(idea)}`;
+    const url = `http://127.0.0.1:8000/products/generate-stream?idea=${encodeURIComponent(idea)}`;
     
     const eventSource = new EventSource(url);
     
